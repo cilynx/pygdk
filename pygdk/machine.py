@@ -15,13 +15,12 @@ class Machine:
             if type is not None or max_feed is not None:
                 raise ValueError(f"Machine must be initialized by JSON or parameters, but not both")
             print(f";{MACHINE} Loading Machine parameters from JSON{ENDC}")
-            f = open(name)
-            dict = json.load(f)
-            f.close()
-            name = dict['Name']
-            type = dict['Type']
-            max_feed = dict['Max Feed Rate (mm/min)']
-            self._max_rpm = dict['Max Spindle RPM']
+            with open(name) as f:
+                dict = json.load(f)
+                name = dict['Name']
+                type = dict['Type']
+                max_feed = dict['Max Feed Rate (mm/min)']
+                self._max_rpm = dict['Max Spindle RPM']
         if not type in [self.MILL, self.LATHE]:
             raise ValueError(f"Machine type ({type}) must be Machine.MILL or Machine.LATHE")
         self._type = type
