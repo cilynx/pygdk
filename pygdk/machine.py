@@ -10,6 +10,10 @@ class Machine:
     MILL = 'Mill'
     LATHE = 'Lathe'
 
+################################################################################
+# Initializer -- Load details from JSON or populate from passed parameters
+################################################################################
+
     def __init__(self, name=None, type=None, max_feed=None):
         if os.path.exists(name):
             if type is not None or max_feed is not None:
@@ -31,6 +35,10 @@ class Machine:
             self._name = name
         print(f";{MACHINE} Initializing a {self.type} named {self.name}{ENDC}")
 
+################################################################################
+# Print and persist Machine parameters as JSON
+################################################################################
+
     @property
     def json(self):
         dict = {
@@ -51,9 +59,17 @@ class Machine:
         f.write(self.json + '\n')
         f.close()
 
+################################################################################
+# Initialize a new Tool affiliated with this Machine instance
+################################################################################
+
     def new_tool(self):
         from .tool import Tool
         return Tool(self)
+
+################################################################################
+# Machine.type -- 'Mill' or 'Lathe'.  Determines how CSS is calculated.
+################################################################################
 
     @property
     def type(self):
@@ -64,6 +80,10 @@ class Machine:
         print(f";{MACHINE} Setting {self.name} machine type: {value}{ENDC}")
         self._type = value
 
+################################################################################
+# Machine.name -- Only used for display, to make things more human-friendly.
+################################################################################
+
     @property
     def name(self):
         return self._name
@@ -72,6 +92,10 @@ class Machine:
     def name (self, value):
         print(f";{MACHINE} Renaming {self.name}: {value}{ENDC}")
         self._name = value
+
+################################################################################
+# Machine.safe_z -- This probably belongs in a Workpiece class, not here
+################################################################################
 
     @property
     def safe_z(self):
@@ -82,6 +106,10 @@ class Machine:
         print(f";{MACHINE} Setting {self.name} Safe Z: {value}{ENDC}")
         self._safe_z = value
 
+################################################################################
+# Machine.max_rpm -- Used in speeds and feeds calculations.
+################################################################################
+
     @property
     def max_rpm(self):
         return self._max_rpm
@@ -90,6 +118,10 @@ class Machine:
     def max_rpm(self, value):
         print(f";{MACHINE} Setting {self.name} max Spindle RPM: {value}{ENDC}")
         self._max_rpm = value
+
+################################################################################
+# Machine.max_feed -- Used for rapids by default.
+################################################################################
 
     @property
     def max_feed(self):
