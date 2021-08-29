@@ -1,6 +1,6 @@
 WARN  = '\033[31m' # Red
 PARAM = '\033[93m' # Yellow
-RAPID = '\033[92m' # Green
+GREEN = '\033[92m' # Green
 ENDC  = '\033[0m'  # End Color
 MACHINE = '\033[91m' # Orange
 
@@ -91,9 +91,9 @@ class Tool:
         self._absolute = bool(value)
         if self._absolute != old_value:
             if self._absolute:
-                print("G90")
+                print(f"G90 ;{GREEN} Absolute mode{ENDC}")
             else:
-                print("G91")
+                print(f"G91 ;{GREEN} Incremental mode{ENDC}")
 
     @property
     def incremental(self):
@@ -107,8 +107,8 @@ class Tool:
 
     relative = incremental
 
-    def move(self, x=None, y=None, z=None, absolute=True, cut=False):
-        print(f";{RAPID} Cut:{cut}, X:{x}, Y:{y}, Z:{z}, ABS:{absolute}{ENDC}")
+    def move(self, x=None, y=None, z=None, absolute=True, cut=False, comment=None):
+#        print(f";{GREEN} Cut:{cut}, X:{x}, Y:{y}, Z:{z}, ABS:{absolute}{ENDC}")
         if x is None and y is None and z is None:
             raise ValueError(f"{WARN}Tool.move requires at least one coordinate to move to{ENDC}")
         else:
@@ -120,28 +120,33 @@ class Tool:
                 print(f" Y{y}", end='')
             if z is not None:
                 print(f" Z{z}", end='')
-            print(f" F{self.feed if cut else self.machine.max_feed}")
+            print(f" F{self.feed if cut else self.machine.max_feed}", end='')
+            if comment:
+                print(f" ;{GREEN} {comment}{ENDC}")
+            else:
+                print()
 
     rapid = move
 
-    def irapid(self, u=None, v=None, w=None):
-        print(f";{RAPID} iRapid: U:{u}, V:{v}, W:{w}{ENDC}")
-        self.move(u, v, w, absolute=False)
+    def irapid(self, u=None, v=None, w=None, comment=None):
+        print(f";{GREEN} iRapid: U:{u}, V:{v}, W:{w}{ENDC}")
+        self.move(u, v, w, absolute=False, cut=False, comment=comment)
 
-    def cut(self, x=None, y=None, z=None):
-        self.move(x, y, z, absolute=True, cut=True)
+    def cut(self, x=None, y=None, z=None, comment=None):
+        self.move(x, y, z, absolute=True, cut=True, comment=comment)
 
-    def icut(self, u=None, v=None, w=None):
-        self.move(u, v, w, absolute=False, cut=True)
+    def icut(self, u=None, v=None, w=None, comment=None):
+        self.move(u, v, w, absolute=False, cut=True, comment=comment)
 
-    def bolt_circle(self, count, c_x, c_y, radius, depth=0):
+    def bolt_circle(self, n, c_x, c_y, r, depth=0):
         self.rapid(z=10)
         theta = 0
-        delta_theta = 2*math.pi/count
-        for i in range(count):
-            x = c_x + (radius * math.cos(theta))
-            y = c_y + (radius * math.sin(theta))
+        delta_theta = 2*math.pi/n
+        print(f";{GREEN} Bolt Circle | n:{n}, c:{[c_x,c_y]}, r:{r}, depth:{depth}{ENDC}")
+        for i in range(n):
+            x = c_x + (r * math.cos(theta))
+            y = c_y + (r * math.sin(theta))
             self.rapid(x, y)
-            self.cut(z=0)
-            self.rapid(z=10)
+            self.cut(z=-10, comment="Drill")
+            self.rapid(z=10, comment="Retract")
             theta += delta_theta
