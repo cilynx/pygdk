@@ -45,7 +45,7 @@ class Tool:
 
     @css.setter
     def css(self, value):
-        print(f";{PARAM} Desired Tool Constant Surface Speed (CSS): {value}m/s{ENDC}")
+        print(f";{PARAM} Desired Tool Constant Surface Speed (CSS): {value}m/s ({value*196.85}ft/min){ENDC}")
         if self.machine.type == "Mill":
             print(f";{MACHINE} Calculating RPM from CSS and tool diameter.{ENDC}")
             if self.diameter is not None:
@@ -74,7 +74,7 @@ class Tool:
         print(f";{MACHINE} Calculating CSS from RPM and tool diameter.{ENDC}")
         if self.diameter is not None:
             self._css = self.rpm * math.pi * self.diameter / 60000
-            print(f";{PARAM} Calculated Tool Constant Surface Speed (CSS): {self.css}m/s{ENDC}")
+            print(f";{PARAM} Calculated Tool Constant Surface Speed (CSS): {self.css}m/s ({self.css*196.85}ft/min){ENDC}")
         else:
             print(f";{WARN} Cannot calculate CSS from RPM because tool diameter is undefined{ENDC}")
 
@@ -147,6 +147,6 @@ class Tool:
             x = c_x + (r * math.cos(theta))
             y = c_y + (r * math.sin(theta))
             self.rapid(x, y)
-            self.cut(z=-10, comment="Drill")
+            self.cut(z=-10, comment=f"Drill {i+1}")
             self.rapid(z=10, comment="Retract")
             theta += delta_theta
