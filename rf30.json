@@ -1,0 +1,6 @@
+{
+  "Name": "RF-30",
+  "Type": "Mill",
+  "Max Feed Rate (mm/min)": 500,
+  "Max Spindle RPM": 2500
+}
