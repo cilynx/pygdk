@@ -7,7 +7,7 @@ MACHINE = '\033[91m' # Orange
 import math
 
 class Tool:
-    def __init__(self, machine):
+    def __init__(self, machine, dict=None, i=None):
         self._machine   = machine
         self._absolute  = None
         self._diameter  = None
@@ -16,6 +16,13 @@ class Tool:
         self._css       = None
         self._material  = None
         self._feed      = None
+        if dict and i:
+            description = dict['description']
+            parts = description.split(',')
+            diameter = ''.join((filter(lambda x: x in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '/', '.', ' '], parts[0])))
+            self._diameter = eval(diameter)*25.4 # This might still be unsafe
+            print(f";{PARAM} Loading Tool {i} from Tool Table: [{description}] {self._diameter}mm{ENDC}")
+            print(f"M6 T{i}")
 
     @property
     def machine(self):
@@ -109,6 +116,8 @@ class Tool:
 
     def move(self, x=None, y=None, z=None, absolute=True, cut=False, comment=None):
 #        print(f";{GREEN} Cut:{cut}, X:{x}, Y:{y}, Z:{z}, ABS:{absolute}{ENDC}")
+        if cut and not self.feed:
+            raise ValueError(f"{WARN}Must set Tool.feed (directly or indirectly) prior to executing cuts")
         if x is None and y is None and z is None:
             raise ValueError(f"{WARN}Tool.move requires at least one coordinate to move to{ENDC}")
         else:

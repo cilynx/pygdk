@@ -2,6 +2,8 @@ import json
 import os
 import sys
 
+from .tool import Tool
+
 MACHINE = '\033[91m'
 ENDC = '\033[0m'
 
@@ -25,6 +27,15 @@ class Machine:
                 type = dict['Type']
                 max_feed = dict['Max Feed Rate (mm/min)']
                 self._max_rpm = dict['Max Spindle RPM']
+                if 'Tool Table' in dict:
+                    tt_file = dict['Tool Table']
+                    if os.path.exists(tt_file):
+                        with open(tt_file, 'r') as tt:
+                            self._tool_table = json.load(tt)
+                    else:
+                        raise ValueError(f"No such file: {tt_file}")
+                else:
+                    self._tool_table = None
         if not type in [self.MILL, self.LATHE]:
             raise ValueError(f"Machine type ({type}) must be Machine.MILL or Machine.LATHE")
         self._type = type
@@ -60,12 +71,24 @@ class Machine:
         f.close()
 
 ################################################################################
-# Initialize a new Tool affiliated with this Machine instance
+# CAMotics-compatible Tool Table
 ################################################################################
 
     def new_tool(self):
-        from .tool import Tool
         return Tool(self)
+
+    def load_tools(self, file):
+        with open(file) as f:
+            self._tool_table = json.load(f)
+
+    def tool(self, i):
+        if self._tool_table:
+            if str(i) in self._tool_table:
+                return Tool(self, self._tool_table[str(i)], str(i))
+            else:
+                raise ValueError(f"Tool {i} is not in the Tool Table")
+        else:
+            raise ValueError(f"Must load Tool Table before using it")
 
 ################################################################################
 # Machine.type -- 'Mill' or 'Lathe'.  Determines how CSS is calculated.
