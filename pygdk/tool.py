@@ -21,7 +21,7 @@ class Tool:
             parts = description.split(',')
             diameter = ''.join((filter(lambda x: x in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '/', '.', ' '], parts[0])))
             self._diameter = eval(diameter)*25.4 # This might still be unsafe
-            print(f";{PARAM} Loading Tool {i} from Tool Table: [{description}] {self._diameter}mm{ENDC}")
+            print(f";{PARAM} Loading Tool {i} from Tool Table: [{description}] {self._diameter:.4f} mm{ENDC}")
             print(f"M6 T{i}")
 
     @property
@@ -35,7 +35,7 @@ class Tool:
     @diameter.setter
     def diameter(self, value):
         self._diameter = value
-        print(f";{PARAM} Setting Tool Diameter: {self.diameter}mm ({self.diameter/25.4}\"){ENDC}")
+        print(f";{PARAM} Setting Tool Diameter: {self.diameter} mm | {self.diameter/25.4}\"{ENDC}")
 
     @property
     def feed(self):
@@ -44,7 +44,7 @@ class Tool:
     @feed.setter
     def feed(self, value):
         self._feed = value
-        print(f";{PARAM} Setting Tool Feed: {self.feed}mm/min{ENDC}")
+        print(f";{PARAM} Setting Tool Feed: {self.feed} mm/min{ENDC}")
 
     @property
     def css(self):
@@ -52,7 +52,7 @@ class Tool:
 
     @css.setter
     def css(self, value):
-        print(f";{PARAM} Desired Tool Constant Surface Speed (CSS): {value}m/s ({value*196.85}ft/min){ENDC}")
+        print(f";{PARAM} Desired Tool Constant Surface Speed (CSS): {value} m/s | {value*196.85} ft/min{ENDC}")
         if self.machine.type == "Mill":
             print(f";{MACHINE} Calculating RPM from CSS and tool diameter.{ENDC}")
             if self.diameter is not None:
@@ -81,7 +81,7 @@ class Tool:
         print(f";{MACHINE} Calculating CSS from RPM and tool diameter.{ENDC}")
         if self.diameter is not None:
             self._css = self.rpm * math.pi * self.diameter / 60000
-            print(f";{PARAM} Calculated Tool Constant Surface Speed (CSS): {self.css}m/s ({self.css*196.85}ft/min){ENDC}")
+            print(f";{PARAM} Calculated Tool Constant Surface Speed (CSS): {self.css:.4f} m/s | {self.css*196.85:.4f} ft/min{ENDC}")
         else:
             print(f";{WARN} Cannot calculate CSS from RPM because tool diameter is undefined{ENDC}")
 
