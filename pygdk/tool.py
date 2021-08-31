@@ -58,7 +58,9 @@ class Tool:
             if self.diameter is not None:
                 rpm = value * 60000 / math.pi / self.diameter
                 if rpm > self.machine.max_rpm:
-                    raise ValueError(f"Tool.rpm ({rpm}) must be lower than Machine.max_rpm ({self.machine.max_rpm})")
+                    css = self.machine.max_rpm * math.pi * self.diameter / 60000
+                    print(f";{WARN} {self.machine.name} cannot do {rpm:.4f} rpm.  Maxing out at {self.machine.max_rpm} rpm | {css:.4f} m/s | {css*196.85:.4f} ft/min{ENDC}")
+                    rpm = self.machine.max_rpm;
                 self.rpm = rpm
             else:
                 raise ValueError(f"{WARN}Cannot calculate RPM from CSS because tool diameter is undefined{ENDC}")
