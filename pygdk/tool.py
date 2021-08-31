@@ -161,3 +161,19 @@ class Tool:
             self.cut(z=-10, comment=f"Drill {i+1}")
             self.rapid(z=10, comment="Retract")
             theta += delta_theta
+
+################################################################################
+# Circular Pocket
+################################################################################
+
+    def circle_pocket(self, c_x, c_y, diameter, depth, z_step=0.1):
+        if diameter < self.diameter:
+            raise ValueError(f"{WARN}Current tool is too big to make this small of a pocket")
+        if diameter < 2 * self.diameter:
+            self.absolute = True
+            self.rapid(z=self.machine.safe_z, comment="Rapid to Safe Z")
+            self.rapid(c_x+diameter/2-self.diameter/2, c_y, comment="Rapid to pocket offset")
+            print(f"G17;{GREEN} Helix in XY-plane{ENDC}")
+            print(f"G2 Z{-depth} I{self.diameter/2-diameter/2} J0 P{int(depth/z_step)} F{self.feed};{GREEN} Heli-drill pocket center{ENDC}")
+            print(f"G2 I{self.diameter/2-diameter/2} J0 P1 F{self.feed};{GREEN} Clean the bottom{ENDC}")
+            self.rapid(c_x, c_y, self.machine.safe_z, comment="Retract and center")

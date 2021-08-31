@@ -16,7 +16,7 @@ class Machine:
 # Initializer -- Load details from JSON or populate from passed parameters
 ################################################################################
 
-    def __init__(self, name=None, type=None, max_feed=None):
+    def __init__(self, name=None, type=None, max_feed=None, safe_z=0):
         if os.path.exists(name):
             if type is not None or max_feed is not None:
                 raise ValueError(f"Machine must be initialized by JSON or parameters, but not both")
@@ -40,6 +40,7 @@ class Machine:
             raise ValueError(f"Machine type ({type}) must be Machine.MILL or Machine.LATHE")
         self._type = type
         self._max_feed = max_feed
+        self._safe_z = safe_z
         if name is None:
             self._name = type
         else:
