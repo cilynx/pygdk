@@ -4,202 +4,202 @@
     "shape": "cylindrical",
     "length": 1,
     "diameter": 0.1875,
-    "description": "3/16\" End Mill, 4 Flutes, 3/8\" Shank"
+    "description": "3/16\" End Mill, 4 Flutes, 3/8\" Shank, HSS"
   },
   "1": {
     "units": "imperial",
     "shape": "cylindrical",
     "length": 1,
     "diameter": 0.25,
-    "description": "1/4\" End Mill, 4 Flutes, 3/8\" Shank"
+    "description": "1/4\" End Mill, 4 Flutes, 3/8\" Shank, HSS"
   },
   "2": {
     "units": "imperial",
     "shape": "cylindrical",
     "length": 1,
     "diameter": 0.3125,
-    "description": "5/16\" End Mill, 4 Flutes, 3/8\" Shank"
+    "description": "5/16\" End Mill, 4 Flutes, 3/8\" Shank, HSS"
   },
   "3": {
     "units": "imperial",
     "shape": "cylindrical",
     "length": 1,
     "diameter": 0.375,
-    "description": "3/8\" End Mill, 4 Flutes, 3/8\" Shank"
+    "description": "3/8\" End Mill, 4 Flutes, 3/8\" Shank, HSS"
   },
   "4": {
     "units": "imperial",
     "shape": "cylindrical",
     "length": 1,
     "diameter": 0.4375,
-    "description": "7/16\" End Mill, 4 Flutes, 3/8\" Shank"
+    "description": "7/16\" End Mill, 4 Flutes, 3/8\" Shank, HSS"
   },
   "5": {
     "units": "imperial",
     "shape": "cylindrical",
     "length": 1,
     "diameter": 0.5,
-    "description": "1/2\" End Mill, 4 Flutes, 1/2\" Shank"
+    "description": "1/2\" End Mill, 4 Flutes, 1/2\" Shank, HSS"
   },
   "6": {
     "units": "imperial",
     "shape": "cylindrical",
     "length": 1.5,
     "diameter": 0.5625,
-    "description": "9/16\" End Mill, 4 Flutes, 1/2\" Shank"
+    "description": "9/16\" End Mill, 4 Flutes, 1/2\" Shank, HSS"
   },
   "7": {
     "units": "imperial",
     "shape": "cylindrical",
     "length": 1.5,
     "diameter": 0.625,
-    "description": "5/8\" End Mill, 4 Flutes, 5/8\" Shank"
+    "description": "5/8\" End Mill, 4 Flutes, 5/8\" Shank, HSS"
   },
   "8": {
     "units": "imperial",
     "shape": "cylindrical",
     "length": 1.5,
     "diameter": 0.6875,
-    "description": "11/16\" End Mill, 4 Flutes, 5/8\" Shank"
+    "description": "11/16\" End Mill, 4 Flutes, 5/8\" Shank, HSS"
   },
   "9": {
     "units": "imperial",
     "shape": "cylindrical",
     "length": 1.5,
     "diameter": 0.75,
-    "description": "3/4\" End Mill, 4 Flutes, 3/4\" Shank"
+    "description": "3/4\" End Mill, 4 Flutes, 3/4\" Shank, HSS"
   },
   "10": {
     "units": "imperial",
     "shape": "cylindrical",
     "length": 1,
     "diameter": 0.1875,
-    "description": "3/16\" End Mill, 2 Flutes, 3/8\" Shank"
+    "description": "3/16\" End Mill, 2 Flutes, 3/8\" Shank, HSS"
   },
   "11": {
     "units": "imperial",
     "shape": "cylindrical",
     "length": 1,
     "diameter": 0.25,
-    "description": "1/4\" End Mill, 2 Flutes, 3/8\" Shank"
+    "description": "1/4\" End Mill, 2 Flutes, 3/8\" Shank, HSS"
   },
   "12": {
     "units": "imperial",
     "shape": "cylindrical",
     "length": 1,
     "diameter": 0.3125,
-    "description": "5/16\" End Mill, 2 Flutes, 3/8\" Shank"
+    "description": "5/16\" End Mill, 2 Flutes, 3/8\" Shank, HSS"
   },
   "13": {
     "units": "imperial",
     "shape": "cylindrical",
     "length": 1,
     "diameter": 0.375,
-    "description": "3/8\" End Mill, 2 Flutes, 3/8\" Shank"
+    "description": "3/8\" End Mill, 2 Flutes, 3/8\" Shank, HSS"
   },
   "14": {
     "units": "imperial",
     "shape": "cylindrical",
     "length": 1,
     "diameter": 0.4375,
-    "description": "7/16\" End Mill, 2 Flutes, 3/8\" Shank"
+    "description": "7/16\" End Mill, 2 Flutes, 3/8\" Shank, HSS"
   },
   "15": {
     "units": "imperial",
     "shape": "cylindrical",
     "length": 1,
     "diameter": 0.5,
-    "description": "1/2\" End Mill, 2 Flutes, 1/2\" Shank"
+    "description": "1/2\" End Mill, 2 Flutes, 1/2\" Shank, HSS"
   },
   "16": {
     "units": "imperial",
     "shape": "cylindrical",
     "length": 1.5,
     "diameter": 0.5625,
-    "description": "9/16\" End Mill, 2 Flutes, 1/2\" Shank"
+    "description": "9/16\" End Mill, 2 Flutes, 1/2\" Shank, HSS"
   },
   "17": {
     "units": "imperial",
     "shape": "cylindrical",
     "length": 1.5,
     "diameter": 0.625,
-    "description": "5/8\" End Mill, 2 Flutes, 5/8\" Shank"
+    "description": "5/8\" End Mill, 2 Flutes, 5/8\" Shank, HSS"
   },
   "18": {
     "units": "imperial",
     "shape": "cylindrical",
     "length": 1.5,
     "diameter": 0.6875,
-    "description": "11/16\" End Mill, 2 Flutes, 5/8\" Shank"
+    "description": "11/16\" End Mill, 2 Flutes, 5/8\" Shank, HSS"
   },
   "19": {
     "units": "imperial",
     "shape": "cylindrical",
     "length": 1.5,
     "diameter": 0.75,
-    "description": "3/4\" End Mill, 2 Flutes, 3/4\" Shank"
+    "description": "3/4\" End Mill, 2 Flutes, 3/4\" Shank, HSS"
   },
   "28": {
     "units": "imperial",
     "shape": "ballnose",
     "length": 0.5,
     "diameter": 0.125,
-    "description": "1/8\" Ball End Mill, 2 Flutes, 3/8\" Shank"
+    "description": "1/8\" Ball End Mill, 2 Flutes, 3/8\" Shank, HSS"
   },
   "30": {
     "units": "imperial",
     "shape": "ballnose",
     "length": 0.5,
     "diameter": 0.1875,
-    "description": "3/16\" Ball End Mill, 2 Flutes, 3/8\" Shank"
+    "description": "3/16\" Ball End Mill, 2 Flutes, 3/8\" Shank, HSS"
   },
   "31": {
     "units": "imperial",
     "shape": "ballnose",
     "length": 0.5,
     "diameter": 0.25,
-    "description": "1/4\" Ball End Mill, 2 Flutes, 3/8\" Shank"
+    "description": "1/4\" Ball End Mill, 2 Flutes, 3/8\" Shank, HSS"
   },
   "32": {
     "units": "imperial",
     "shape": "ballnose",
     "length": 1,
     "diameter": 0.3125,
-    "description": "5/16\" Ball End Mill, 2 Flutes, 3/8\" Shank"
+    "description": "5/16\" Ball End Mill, 2 Flutes, 3/8\" Shank, HSS"
   },
   "33": {
     "units": "imperial",
     "shape": "ballnose",
     "length": 1,
     "diameter": 0.375,
-    "description": "3/8\" Ball End Mill, 2 Flutes, 3/8\" Shank"
+    "description": "3/8\" Ball End Mill, 2 Flutes, 3/8\" Shank, HSS"
   },
   "34": {
     "units": "imperial",
     "shape": "ballnose",
     "length": 1,
     "diameter": 0.4375,
-    "description": "7/16\" Ball End Mill, 2 Flutes, 1/2\" Shank"
+    "description": "7/16\" Ball End Mill, 2 Flutes, 1/2\" Shank, HSS"
   },
   "35": {
     "units": "imperial",
     "shape": "ballnose",
     "length": 1,
     "diameter": 0.5,
-    "description": "1/2\" Ball End Mill, 2 Flutes, 1/2\" Shank"
+    "description": "1/2\" Ball End Mill, 2 Flutes, 1/2\" Shank, HSS"
   },
   "37": {
     "units": "imperial",
     "shape": "ballnose",
     "length": 1.5,
     "diameter": 0.625,
-    "description": "5/8\" Ball End Mill, 2 Flutes, 1/2\" Shank"
+    "description": "5/8\" Ball End Mill, 2 Flutes, 1/2\" Shank, HSS"
   },
   "39": {
     "units": "imperial",
     "shape": "ballnose",
     "length": 1.5,
     "diameter": 0.75,
-    "description": "3/4\" Ball End Mill, 2 Flutes, 3/4\" Shank"
+    "description": "3/4\" Ball :%End Mill, 2 Flutes, 3/4\" Shank, HSS"
   }
 }
