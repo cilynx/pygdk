@@ -314,7 +314,7 @@ class Machine:
 # Machine.bolt_circle() -- Make a Bolt Circle
 ################################################################################
 
-    def bolt_circle(self, n, c_x, c_y, r, depth=0):
+    def bolt_circle(self, c_x, c_y, n, r, depth=0):
         print(f";{CYAN} Bolt Circle | n:{n}, c:{[c_x,c_y]}, r:{r}, depth:{depth}{ENDC}")
         self.rapid(z=10, comment="Rapid to Safe Z")
         theta = 0
