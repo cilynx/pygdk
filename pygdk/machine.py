@@ -242,6 +242,15 @@ class Machine:
             print(f";{YELLOW} Calculated Tool Constant Surface Speed (CSS): {self.css:.4f} m/s | {self.css*196.85:.4f} ft/min{ENDC}")
         else:
             print(f";{RED} Cannot calculate CSS from RPM because tool diameter is undefined{ENDC}")
+        chip_load = 0.1 # mm/flute TODO: Parameterize this
+        flutes = 4 # TODO: Parameterize this
+        if chip_load is not None:
+            feed = chip_load * flutes * self.rpm # mm/min
+            print(f";{ORANGE} Calculated feed from chip load, flutes, and RPM: {feed:.4f} mm/min | {feed/304.8:.4f} ft/min{ENDC}")
+            if feed > self.max_feed:
+                print(f";{RED} {self.name} cannot feed at {feed:.4f} mm/min.  Maxing out at {self.max_feed} mm/min{ENDC}")
+                feed = self.max_feed
+            self.feed = feed
 
 ################################################################################
 # Absolute & Incremental Movement Modes
