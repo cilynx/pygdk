@@ -138,8 +138,7 @@ class Machine:
             tool = tool.number
         else:
             raise TypeError(f"{RED}Machine.current_tool must be set to an int or Tool object{ENDC}")
-        print(f";{ORANGE} Selecting Tool {tool}{ENDC}")
-        print(f"M6 T{tool}")
+        print(f"M6 T{tool} ;{ORANGE} Select Tool {tool}{ENDC}")
 
     def select_tool(self, tool):
         self.current_tool = tool
@@ -234,10 +233,9 @@ class Machine:
         if value > self.max_rpm:
             raise ValueError(f"Tool.rpm ({value}) must be lower than Machine.max_rpm ({self.max_rpm})")
         self._rpm = value
-        print(f";{YELLOW} Setting Constant Spindle Speed Mode{ENDC}")
-        print("G97")
-        print(f";{YELLOW} Setting Tool RPM: {value}{ENDC}")
-        print(f"S{value}")
+        print(f"G97 ;{YELLOW} Constant Spindle Speed Mode{ENDC}")
+        print(f";{YELLOW} Using Tool RPM: {value}{ENDC}")
+        # print(f"S{value}")
         print(f";{ORANGE} Calculating CSS from RPM and tool diameter.{ENDC}")
         if self.current_tool.diameter is not None:
             self._css = self.rpm * math.pi * self.current_tool.diameter / 60000
