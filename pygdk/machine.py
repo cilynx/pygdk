@@ -327,16 +327,17 @@ class Machine:
             x = c_x + (r * math.cos(theta))
             y = c_y + (r * math.sin(theta))
             self.rapid(x, y, comment=f"Rapid to {i+1}")
-            self.cut(z=-10, comment=f"Drill {i+1}")
+            self.cut(z=depth, comment=f"Drill {i+1}")
             self.rapid(z=10, comment="Retract")
             theta += delta_theta
+        print(f";{CYAN} Bolt Circle | END{ENDC}")
 
 ################################################################################
 # Mill Drill - Helix-drill a hole up to 2x the diameter of the end mill used
 ################################################################################
 
     def mill_drill(self, c_x, c_y, diameter, depth, z_step=0.1, retract=True):
-        print(f";{CYAN} Mill Drill | center: {[c_x, c_y]}, diameter: {diameter:.4f}, depth: {depth}, z_step: {z_step:.4f}{ENDC}")
+        print(f";{CYAN} Mill Drill | center: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, diameter: {diameter:.4f}, depth: {depth}, z_step: {z_step:.4f}{ENDC}")
         if diameter < self.current_tool.diameter:
             raise ValueError(f"{RED}Tool {self.current_tool.number} is too big ({self.current_tool.diameter:.4f} mm) to make this small ({diameter} mm) of a pocket{ENDC}")
         if depth > self.current_tool.length:
@@ -359,7 +360,7 @@ class Machine:
 ################################################################################
 
     def circular_pocket(self, c_x, c_y, diameter, depth, step=None, finish=0.1, retract=True):
-        print(f";{CYAN} Circular Pocket | center: {[c_x, c_y]}, diameter: {diameter:.4f}, depth: {depth}, step: {step}{ENDC}")
+        print(f";{CYAN} Circular Pocket | center: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, diameter: {diameter:.4f}, depth: {depth}, step: {step}{ENDC}")
         if step is None: step = self.current_tool.diameter/10
         if diameter > 2 * self.current_tool.diameter:
             drill_diameter = 2*self.current_tool.diameter - 2*finish
@@ -390,3 +391,19 @@ class Machine:
         if retract:
             self.rapid(c_x, c_y, self.safe_z, comment="Retract")
         print(f";{CYAN} Circular Pocket | END{ENDC}")
+
+################################################################################
+# Machine.pocket_circle() -- Like a Bolt Circle, but with Circular Pockets
+################################################################################
+
+    def pocket_circle(self, c_x, c_y, n, r, depth, diameter, step=None, finish=0.1):
+        print(f";{CYAN} Pocket Circle | n:{n}, c:{[c_x,c_y]}, r:{r}, depth:{depth}, diameter:{diameter}, step:{step}, finish:{finish}{ENDC}")
+        self.rapid(z=10, comment="Rapid to Safe Z")
+        theta = 0
+        delta_theta = 2*math.pi/n
+        for i in range(n):
+            x = c_x + (r * math.cos(theta))
+            y = c_y + (r * math.sin(theta))
+            self.circular_pocket(x, y, diameter, depth, step, finish)
+            theta += delta_theta
+        print(f";{CYAN} Pocket Circle | END{ENDC}")
