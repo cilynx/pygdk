@@ -21,7 +21,7 @@ class Machine:
 # Initializer -- Load details from JSON or populate from passed parameters
 ################################################################################
 
-    def __init__(self, name=None, type=None, max_feed=None, safe_z=0):
+    def __init__(self, name=None, type=None, max_feed=None, safe_z=10):
         if os.path.exists(name):
             if type is not None or max_feed is not None:
                 raise ValueError(f"Machine must be initialized by JSON or parameters, but not both")
@@ -291,20 +291,14 @@ class Machine:
     def move(self, x=None, y=None, z=None, absolute=True, cut=False, comment=None):
 #        print(f";{GREEN} Cut:{cut}, X:{x}, Y:{y}, Z:{z}, ABS:{absolute}{ENDC}")
         if x is None and y is None and z is None:
-            raise ValueError(f"{RED}Tool.move requires at least one coordinate to move to{ENDC}")
+            raise ValueError(f"{RED}Machine.move requires at least one coordinate to move to{ENDC}")
         self.absolute = absolute
         print("G1" if cut else "G0", end='')
-        if x is not None:
-            print(f" X{x}", end='')
-        if y is not None:
-            print(f" Y{y}", end='')
-        if z is not None:
-            print(f" Z{z}", end='')
+        if x is not None: print(f" X{x:.4f}", end='')
+        if y is not None: print(f" Y{y:.4f}", end='')
+        if z is not None: print(f" Z{z:.4f}", end='')
         print(f" F{self.feed if cut else self.max_feed}", end='')
-        if comment:
-            print(f" ;{GREEN} {comment}{ENDC}")
-        else:
-            print()
+        print(f" ;{GREEN} {comment}{ENDC}" if comment else '')
 
     rapid = move
 
@@ -316,6 +310,9 @@ class Machine:
 
     def icut(self, u=None, v=None, w=None, comment=None):
         self.move(u, v, w, absolute=False, cut=True, comment=comment)
+
+    def retract(self, comment=None):
+        self.move(z=self.safe_z, comment=comment)
 
 ################################################################################
 # Machine.bolt_circle() -- Make a Bolt Circle
@@ -335,17 +332,61 @@ class Machine:
             theta += delta_theta
 
 ################################################################################
+# Mill Drill - Helix-drill a hole up to 2x the diameter of the end mill used
+################################################################################
+
+    def mill_drill(self, c_x, c_y, diameter, depth, z_step=0.1, retract=True):
+        print(f";{CYAN} Mill Drill | center: {[c_x, c_y]}, diameter: {diameter:.4f}, depth: {depth}, z_step: {z_step:.4f}{ENDC}")
+        if diameter < self.current_tool.diameter:
+            raise ValueError(f"{RED}Tool {self.current_tool.number} is too big ({self.current_tool.diameter:.4f} mm) to make this small ({diameter} mm) of a pocket{ENDC}")
+        if depth > self.current_tool.length:
+            raise ValueError(f"{RED}Tool {self.current_tool.number} is shorter ({self.current_tool.length:.4f} mm) than pocket is deep ({depth} mm){ENDC}")
+        if diameter > 2 * self.current_tool.diameter:
+            raise ValueError(f"{RED}Tool {self.current_tool.number} is less than half as wide ({self.current_tool.diameter} mm) as the hole ({diameter} mm)")
+        self.absolute = True
+        self.rapid(z=self.safe_z, comment="Rapid to Safe Z")
+        self.rapid(c_x+diameter/2-self.current_tool.diameter/2, c_y, comment="Rapid to pocket offset")
+        self.rapid(z=0.1, comment="Rapid to workpiece surface")
+        print(f"G17;{GREEN} Helix in XY-plane{ENDC}")
+        print(f"G2 Z{-depth} I{self.current_tool.diameter/2-diameter/2:.4f} J0 P{int(depth/z_step)} F{self.feed};{GREEN} Heli-drill{ENDC}")
+        print(f"G2 I{self.current_tool.diameter/2-diameter/2:.4f} J0 P1 F{self.feed};{GREEN} Clean the bottom{ENDC}")
+        if retract:
+            self.rapid(c_x, c_y, self.safe_z, comment="Retract")
+        print(f";{CYAN} Mill Drill | END{ENDC}")
+
+################################################################################
 # Circular Pocket
 ################################################################################
 
-    def circle_pocket(self, c_x, c_y, diameter, depth, z_step=0.1):
-        if diameter < self.diameter:
-            raise ValueError(f"{WARN}Current tool is too big to make this small of a pocket")
-        if diameter < 2 * self.diameter:
-            self.absolute = True
-            self.rapid(z=self.machine.safe_z, comment="Rapid to Safe Z")
-            self.rapid(c_x+diameter/2-self.diameter/2, c_y, comment="Rapid to pocket offset")
-            print(f"G17;{GREEN} Helix in XY-plane{ENDC}")
-            print(f"G2 Z{-depth} I{self.diameter/2-diameter/2} J0 P{int(depth/z_step)} F{self.feed};{GREEN} Heli-drill pocket center{ENDC}")
-            print(f"G2 I{self.diameter/2-diameter/2} J0 P1 F{self.feed};{GREEN} Clean the bottom{ENDC}")
-            self.rapid(c_x, c_y, self.machine.safe_z, comment="Retract and center")
+    def circular_pocket(self, c_x, c_y, diameter, depth, step=None, finish=0.1, retract=True):
+        print(f";{CYAN} Circular Pocket | center: {[c_x, c_y]}, diameter: {diameter:.4f}, depth: {depth}, step: {step}{ENDC}")
+        if step is None: step = self.current_tool.diameter/10
+        if diameter > 2 * self.current_tool.diameter:
+            drill_diameter = 2*self.current_tool.diameter - 2*finish
+        else:
+            drill_diameter = diameter - 2*finish
+        self.mill_drill(c_x, c_y, drill_diameter, depth, step, retract=False)
+        center = self.current_tool.diameter/2-drill_diameter/2
+        i = 0;
+        for i in range(1, int((diameter/2-drill_diameter/2)/step)+1):
+            if i%2:
+                # Right to Left
+                print(f"G2 I{center-i*step+step/2:.4f} X{c_x-drill_diameter/2+self.current_tool.diameter/2-i*step:.4f} F{self.feed}{'; '+GREEN+'Spiral out'+ENDC if i==1 else ''}")
+            else:
+                # Left to Right
+                print(f"G2 I{i*step-step/2-center:.4f} X{c_x+drill_diameter/2-self.current_tool.diameter/2+i*step:.4f} F{self.feed}")
+        if i%2:
+            # Left to Right
+            x2 = c_x+diameter/2-self.current_tool.diameter/2
+            x1 = c_x+drill_diameter/2-self.current_tool.diameter/2+(i-1)*step
+            print(f"G2 I{i*step-step/2-center+(x2-x1)/2:.4f} X{x2} F{self.feed}; {GREEN}Getting to final dimension{ENDC}")
+            print(f"G2 I{self.current_tool.diameter/2-diameter/2} F{self.feed}; {GREEN}Final pass{ENDC}")
+        else:
+            # Right to Left
+            x2 = c_x-diameter/2+self.current_tool.diameter/2
+            x1 = c_x-drill_diameter/2+self.current_tool.diameter/2-(i-1)*step
+            print(f"G2 I{center-i*step+step/2+(x2-x1)/2:.4f} X{x2} F{self.feed}; {GREEN}Getting to final dimension{ENDC}")
+            print(f"G2 I{diameter/2-self.current_tool.diameter/2} F{self.feed}; {GREEN}Final pass{ENDC}")
+        if retract:
+            self.rapid(c_x, c_y, self.safe_z, comment="Retract")
+        print(f";{CYAN} Circular Pocket | END{ENDC}")
