@@ -196,7 +196,7 @@ class Machine:
     @feed.setter
     def feed(self, feed):
         self._feed = feed
-        print(f";{YELLOW} Setting Machine Feed: {self.feed} mm/min{ENDC}")
+        print(f";{YELLOW} Using Machine Feed: {self.feed:.4f} mm/min{ENDC}")
 
 ################################################################################
 # Machine.css - Constant Surface Speed
@@ -208,7 +208,7 @@ class Machine:
 
     @css.setter
     def css(self, value):
-        print(f";{YELLOW} Desired Constant Surface Speed (CSS): {value} m/s | {value*196.85} ft/min{ENDC}")
+        print(f";{YELLOW} Desired Constant Surface Speed (CSS): {value} m/s | {value*196.85:.4f} ft/min{ENDC}")
         if self.type == "Mill":
             print(f";{ORANGE} Calculating RPM from CSS and tool diameter.{ENDC}")
             rpm = value * 60000 / math.pi / self.current_tool.diameter
@@ -231,10 +231,10 @@ class Machine:
     @rpm.setter
     def rpm(self, value):
         if value > self.max_rpm:
-            raise ValueError(f"Tool.rpm ({value}) must be lower than Machine.max_rpm ({self.max_rpm})")
+            raise ValueError(f"Machine.rpm ({value}) must be lower than Machine.max_rpm ({self.max_rpm})")
         self._rpm = value
         print(f"G97 ;{YELLOW} Constant Spindle Speed Mode{ENDC}")
-        print(f";{YELLOW} Using Tool RPM: {value}{ENDC}")
+        print(f";{YELLOW} Using Spindle RPM: {value:.4f}{ENDC}")
         # print(f"S{value}")
         print(f";{ORANGE} Calculating CSS from RPM and tool diameter.{ENDC}")
         if self.current_tool.diameter is not None:
@@ -360,7 +360,7 @@ class Machine:
 ################################################################################
 
     def circular_pocket(self, c_x, c_y, diameter, depth, step=None, finish=0.1, retract=True):
-        print(f";{CYAN} Circular Pocket | center: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, diameter: {diameter:.4f}, depth: {depth}, step: {step}{ENDC}")
+        print(f";{CYAN} Circular Pocket | center: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, diameter: {diameter:.4f}, depth: {depth}, step: {step}, finish: {finish}{ENDC}")
         if step is None: step = self.current_tool.diameter/10
         if diameter > 2 * self.current_tool.diameter:
             drill_diameter = 2*self.current_tool.diameter - 2*finish
