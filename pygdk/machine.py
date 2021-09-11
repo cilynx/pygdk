@@ -407,3 +407,80 @@ class Machine:
             self.circular_pocket(x, y, diameter, depth, step, finish)
             theta += delta_theta
         print(f";{CYAN} Pocket Circle | END{ENDC}")
+
+################################################################################
+# Rectangular Pocket
+################################################################################
+
+    def rectangular_pocket(self, c_x, c_y, x, y, depth, step=None, finish=0.1, undercut=False, retract=True):
+        print(f";{CYAN} Rectangular Pocket | center: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, x: {x:.4f}, y: {y:.4f}, depth: {depth}, step: {step}, finish: {finish}, undercut: {undercut}{ENDC}")
+        if depth > self.current_tool.length:
+            raise ValueError(f"{RED}Tool {self.current_tool.number} is shorter ({self.current_tool.length:.4f} mm) than pocket is deep ({depth} mm){ENDC}")
+        rough_depth = depth#-2*finish
+        rough_x = x-2*finish
+        rough_y = y-2*finish
+        short = min(rough_x,rough_y)
+        if short < self.current_tool.diameter:
+            raise ValueError(f"{RED}Tool {self.current_tool.number} is too big ({self.current_tool.diameter:.4f} mm) to make this small ({short} mm) of a pocket{ENDC}")
+        if step is None: step = self.current_tool.diameter/10
+
+        # Ramp down to rough depth in the center, equidistant to each edge
+        ramp_short = min(short-self.current_tool.diameter, 3/4*self.current_tool.diameter)
+        long = max(rough_x,rough_y)
+        ramp_long = ramp_short + long - short
+        ramp_x = ramp_long if x > y else ramp_short
+        ramp_y = ramp_long if y > x else ramp_short
+        ramp_passes = 4*math.ceil(rough_depth/step/4)
+        ramp_step = rough_depth / ramp_passes
+        assert ramp_step <= step
+        spiral_passes = 2*math.ceil((rough_x-ramp_x-self.current_tool.diameter)/step/2)
+        spiral_step = (rough_x-ramp_x-self.current_tool.diameter)/spiral_passes
+        assert spiral_step <= step
+        self.retract(comment="Retract")
+        for i in range(0,int(ramp_passes/4)):
+            print(f"G1 X{c_x-ramp_x/2:.4f} Y{c_y+ramp_y/2:.4f} Z{-(4*i+0)*ramp_step:.4f} F{self.feed} ;{GREEN} Ramp pass {i+1}{ENDC}")
+            print(f"G1 X{c_x+ramp_x/2:.4f} Y{c_y+ramp_y/2:.4f} Z{-(4*i+1)*ramp_step:.4f} F{self.feed}")
+            print(f"G1 X{c_x+ramp_x/2:.4f} Y{c_y-ramp_y/2:.4f} Z{-(4*i+2)*ramp_step:.4f} F{self.feed}")
+            print(f"G1 X{c_x-ramp_x/2:.4f} Y{c_y-ramp_y/2:.4f} Z{-(4*i+3)*ramp_step:.4f} F{self.feed}")
+        print(f"G1 X{c_x-ramp_x/2:.4f} Y{c_y+ramp_y/2:.4f} Z{-rough_depth:.4f} F{self.feed} ;{GREEN} Ramp pass {i+2}{ENDC}")
+        print(f"G1 X{c_x+ramp_x/2:.4f} Y{c_y+ramp_y/2:.4f} Z{-rough_depth:.4f} F{self.feed}")
+        print(f"G1 X{c_x+ramp_x/2:.4f} Y{c_y-ramp_y/2:.4f} Z{-rough_depth:.4f} F{self.feed}")
+        print(f"G1 X{c_x-ramp_x/2:.4f} Y{c_y-ramp_y/2:.4f} Z{-rough_depth:.4f} F{self.feed}")
+        print(f"G1 X{c_x-ramp_x/2:.4f} Y{c_y+ramp_y/2:.4f} Z{-rough_depth:.4f} F{self.feed}")
+
+        # Spiral out to dimension-finish
+        for i in range(0,int(spiral_passes/2)):
+            print(f"G1 X{c_x-ramp_x/2-i*spiral_step:.4f} Y{c_y+ramp_y/2+i*spiral_step:.4f} F{self.feed} ;{GREEN} Spiral pass {i+1}{ENDC}")
+            print(f"G1 X{c_x+ramp_x/2+i*spiral_step:.4f} Y{c_y+ramp_y/2+i*spiral_step:.4f} F{self.feed}")
+            print(f"G1 X{c_x+ramp_x/2+i*spiral_step:.4f} Y{c_y-ramp_y/2-i*spiral_step:.4f} F{self.feed}")
+            print(f"G1 X{c_x-ramp_x/2-(i+1)*spiral_step:.4f} Y{c_y-ramp_y/2-i*spiral_step:.4f} F{self.feed}")
+
+        # On final pass, ramp to final dimension (x,y,z) in one corner, then finish all four sides.
+        # Add undercuts on each corner if needed
+        d = self.current_tool.diameter
+        h = d*math.sqrt(2)
+        s = 1/2*(h-d)
+        corner = math.sqrt((s**2)/2)
+
+        print(f"G1 X{c_x-x/2+d/2:.4f} Y{c_y+y/2-d/2:.4f} F{self.feed} ;{GREEN} Finishing pass{ENDC}")
+        print(f"G1 X{c_x+x/2-d/2:.4f} Y{c_y+y/2-d/2:.4f} F{self.feed}")
+        if undercut:
+            print(f"G1 X{c_x+x/2-d/2+corner:.4f} Y{c_y+y/2-d/2+corner:.4f} F{self.feed} ;{GREEN} Top Left Undercut{ENDC}")
+            print(f"G1 X{c_x+x/2-d/2:.4f} Y{c_y+y/2-d/2:.4f} F{self.feed}")
+        print(f"G1 X{c_x+x/2-d/2:.4f} Y{c_y-y/2+d/2:.4f} F{self.feed}")
+        if undercut:
+            print(f"G1 X{c_x+x/2-d/2+corner:.4f} Y{c_y-y/2+d/2-corner:.4f} F{self.feed} ;{GREEN} Top Right Undercut{ENDC}")
+            print(f"G1 X{c_x+x/2-d/2:.4f} Y{c_y-y/2+d/2:.4f} F{self.feed}")
+        print(f"G1 X{c_x-x/2+d/2:.4f} Y{c_y-y/2+d/2:.4f} F{self.feed}")
+        if undercut:
+            print(f"G1 X{c_x-x/2+d/2-corner:.4f} Y{c_y-y/2+d/2-corner:.4f} F{self.feed} ;{GREEN} Bottom Right Undercut{ENDC}")
+            print(f"G1 X{c_x-x/2+d/2:.4f} Y{c_y-y/2+d/2:.4f} F{self.feed}")
+        print(f"G1 X{c_x-x/2+d/2:.4f} Y{c_y+y/2-d/2:.4f} F{self.feed}")
+        if undercut:
+            print(f"G1 X{c_x-x/2+d/2-corner:.4f} Y{c_y+y/2-d/2+corner:.4f} F{self.feed} ;{GREEN} Bottom Left Undercut{ENDC}")
+            print(f"G1 X{c_x-x/2+d/2:.4f} Y{c_y+y/2-d/2:.4f} F{self.feed}")
+
+        if retract:
+            self.rapid(c_x, c_y, self.safe_z, comment="Retract")
+
+        print(f";{CYAN} Rectangular Pocket | END{ENDC}")
