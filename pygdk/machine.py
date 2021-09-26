@@ -41,6 +41,10 @@ class Machine:
                         raise ValueError(f"No such file: {tt_file}")
                 else:
                     self._tool_table = None
+                if 'Plotter' in dict:
+                    self._plotter = dict['Plotter']
+                else:
+                    self._plotter = None
         if not type in [self.MILL, self.LATHE]:
             raise ValueError(f"Machine type ({type}) must be Machine.MILL or Machine.LATHE")
         self._type = type
@@ -50,6 +54,12 @@ class Machine:
             self._name = type
         else:
             self._name = name
+        self._x_offset = 0
+        self._y_offset = 0
+        self._z_offset = 0
+        self._current_tool = None
+        self._absolute = None
+        self._feed = None
         print(f";{ORANGE} Initializing a {self.type} named {self.name}{ENDC}")
 
 ################################################################################
@@ -91,6 +101,9 @@ class Machine:
             if str(i) in self._tool_table:
                 return Tool(self, self._tool_table[str(i)], str(i))
             else:
+                for index in self._tool_table:
+                    if i in self._tool_table[str(index)]['description']:
+                        return Tool(self, self._tool_table[str(index)], str(index))
                 raise ValueError(f"{RED}Tool {i} is not in the Tool Table{ENDC}")
         else:
             raise ValueError(f"Must load Tool Table before using it")
@@ -122,6 +135,37 @@ class Machine:
         self._name = value
 
 ################################################################################
+# Tool Offsets -- Mostly for the Plotter
+################################################################################
+
+    @property
+    def x_offset(self):
+        return self._x_offset
+
+    @x_offset.setter
+    def x_offset (self, value):
+        print(f";{ORANGE} Setting x_offset: {value}{ENDC}")
+        self._x_offset = value
+
+    @property
+    def y_offset(self):
+        return self._y_offset
+
+    @y_offset.setter
+    def y_offset (self, value):
+        print(f";{ORANGE} Setting y_offset: {value}{ENDC}")
+        self._y_offset = value
+
+    @property
+    def z_offset(self):
+        return self._z_offset
+
+    @z_offset.setter
+    def z_offset (self, value):
+        print(f";{ORANGE} Setting z_offset: {value}{ENDC}")
+        self._z_offset = value
+
+################################################################################
 # Machine.current_tool -- Object representing the current Tool
 ################################################################################
 
@@ -133,12 +177,18 @@ class Machine:
     def current_tool(self, tool):
         if isinstance(tool, int):
             self._current_tool = self.tool(tool)
+        elif isinstance(tool, str):
+            self._current_tool = self.tool(tool)
+            tool = self._current_tool.number
         elif isinstance(tool, Tool):
             self._current_tool = tool
-            tool = tool.number
+            tool = self._current_tool.number
         else:
-            raise TypeError(f"{RED}Machine.current_tool must be set to an int or Tool object{ENDC}")
-        print(f"M6 T{tool} ;{ORANGE} Select Tool {tool}{ENDC}")
+            raise TypeError(f"{RED}Machine.current_tool must be set to an int, str, or Tool object{ENDC}")
+        if 'Sharpie' not in self._current_tool._description:
+            print(f"M6 T{tool} ;{ORANGE} Select Tool {tool}{ENDC}")
+        else:
+            print(f";{ORANGE} Select Tool {tool}{ENDC}")
 
     def select_tool(self, tool):
         self.current_tool = tool
@@ -188,7 +238,7 @@ class Machine:
 
     @property
     def feed(self):
-        if hasattr(self, '_feed') and self._feed is not None:
+        if self._feed is not None:
             return self._feed
         else:
             raise ValueError(f"{RED}Must set Machine.feed (directly or indirectly) prior to executing cuts")
@@ -264,7 +314,7 @@ class Machine:
     def absolute(self, value):
         if value not in (False,True,'0','1'):
             raise ValueError("Machine.absolute can only be set to bool (True/False) or int (0/1)")
-        old_value = self._absolute if hasattr(self, '_absolute') else None
+        old_value = self._absolute
         self._absolute = bool(value)
         if self._absolute != old_value:
             if self._absolute:
@@ -290,6 +340,13 @@ class Machine:
 
     def move(self, x=None, y=None, z=None, absolute=True, cut=False, comment=None):
 #        print(f";{GREEN} Cut:{cut}, X:{x}, Y:{y}, Z:{z}, ABS:{absolute}{ENDC}")
+        if x is not None:
+            x = x+self.x_offset
+        if y is not None:
+            y = y+self.y_offset
+        if z is not None:
+            z = z+self.z_offset
+
         if x is None and y is None and z is None:
             raise ValueError(f"{RED}Machine.move requires at least one coordinate to move to{ENDC}")
         self.absolute = absolute
@@ -484,3 +541,35 @@ class Machine:
             self.rapid(c_x, c_y, self.safe_z, comment="Retract")
 
         print(f";{CYAN} Rectangular Pocket | END{ENDC}")
+
+################################################################################
+# Pen Color
+################################################################################
+
+    @property
+    def pen_color(self):
+        return self.current_tool._description
+
+    @pen_color.setter
+    def pen_color(self, value):
+        if self._plotter:
+            if self.current_tool:
+                self.rapid(z=2, absolute=False)
+                self.rapid(x=self._plotter['Slot Zero'], z=self._plotter['Z-Stage'], comment="Stage to retract current pen")
+                self.rapid(z=self._plotter['Z-Click'], comment="Retract current pen")
+                self.rapid(z=self._plotter['Z-Stage'], comment="Return to pen change stage")
+            colors = self._plotter['Magazine'][0]
+            if value in colors:
+                i = colors.index(value)
+                self.x_offset = i*self._plotter['Pen Spacing']
+                self.rapid(x=self._plotter['Slot Zero'], z=self._plotter['Z-Stage'], comment="Stage to activate new pen")
+                self.rapid(z=self._plotter['Z-Click'], comment="Activate new pen")
+                self.rapid(z=self._plotter['Z-Stage'], comment="Return to pen change stage")
+                self.current_tool = value
+            elif value is None:
+                self.x_offset = 0;
+                self.rapid(x=self._plotter['Slot Zero'], comment="Rapid to Pen 0")
+            else:
+                raise ValueError(f"{RED}'{value}' is not a configured color.  Options are: {colors}" )
+        else:
+            raise ValueError(f"{RED}You must configure a Plotter before you can set pen_color{ENDC}")

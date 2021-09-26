@@ -201,5 +201,61 @@
     "length": 1.5,
     "diameter": 0.75,
     "description": "3/4\" Ball End Mill, 2 Flutes, 3/4\" Shank, HSS"
-  }
+  },
+  "100": {
+    "units": "metric",
+    "shape": "cylindrical",
+    "length": 1,
+    "diameter": 1,
+    "description": "Sharpie, Ultra Fine, Black"
+  },
+  "101": {
+    "units": "metric",
+    "shape": "cylindrical",
+    "length": 1,
+    "diameter": 1,
+    "description": "Sharpie, Ultra Fine, Green"
+   },
+   "102": {
+     "units": "metric",
+     "shape": "cylindrical",
+     "length": 1,
+     "diameter": 1,
+     "description": "Sharpie, Ultra Fine, Blue"
+   },
+   "103": {
+     "units": "metric",
+     "shape": "cylindrical",
+     "length": 1,
+     "diameter": 1,
+     "description": "Sharpie, Ultra Fine, Lime Green"
+   },
+   "104": {
+     "units": "metric",
+     "shape": "cylindrical",
+     "length": 1,
+     "diameter": 1,
+     "description": "Sharpie, Ultra Fine, Red"
+   },
+   "105": {
+     "units": "metric",
+     "shape": "cylindrical",
+     "length": 1,
+     "diameter": 1,
+     "description": "Sharpie, Ultra Fine, Teal"
+   },
+   "106": {
+     "units": "metric",
+     "shape": "cylindrical",
+     "length": 1,
+     "diameter": 1,
+     "description": "Sharpie, Ultra Fine, Light Blue"
+   },
+   "107": {
+     "units": "metric",
+     "shape": "cylindrical",
+     "length": 1,
+     "diameter": 1,
+     "description": "Sharpie, Ultra Fine, Orange"
+   }
 }

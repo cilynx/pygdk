@@ -1,0 +1,17 @@
+{
+   "Name": "Onefinity",
+   "Type": "Mill",
+   "Max Feed Rate (mm/min)": 500,
+   "Max Spindle RPM": 14000,
+   "Tool Table": "tools.json",
+   "Plotter": {
+      "Magazine": [
+         ["Black","Blue","Red"]
+      ],
+      "Slot Zero": 0,
+      "Pen Spacing": 13.7,
+      "Z-Touch": -122,
+      "Z-Click": -5,
+      "Z-Stage": -30
+   }
+}
