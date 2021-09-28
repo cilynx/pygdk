@@ -561,7 +561,9 @@ class Machine:
             if value is None:
                 self.x_offset = 0;
                 self.y_offset = 0;
-                self.rapid(x=self._plotter['Slot Zero'][0], y=self._plotter['Slot Zero'][1], comment="Rapid to Pen 0")
+                rows = len(self._plotter['Magazine'])
+                backset = self._plotter['Slot Zero'][1] + (rows+1)*self._plotter['Pen Spacing'];
+                self.rapid(x=self._plotter['Slot Zero'][0], y=backset, comment="Rapid to homing-safe backset")
                 return self.current_tool
             for row in self._plotter['Magazine']:
                 if value in row:
