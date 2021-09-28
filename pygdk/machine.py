@@ -553,23 +553,27 @@ class Machine:
     @pen_color.setter
     def pen_color(self, value):
         if self._plotter:
+            self.rapid(z=self._plotter['Z-Stage'], comment="Go to pen change staging height")
             if self.current_tool:
-                self.rapid(z=2, absolute=False)
-                self.rapid(x=self._plotter['Slot Zero'], z=self._plotter['Z-Stage'], comment="Stage to retract current pen")
+                self.rapid(x=self._plotter['Slot Zero'][0], y=self._plotter['Slot Zero'][1], z=self._plotter['Z-Stage'], comment="Stage to retract current pen")
                 self.rapid(z=self._plotter['Z-Click'], comment="Retract current pen")
                 self.rapid(z=self._plotter['Z-Stage'], comment="Return to pen change stage")
-            colors = self._plotter['Magazine'][0]
-            if value in colors:
-                i = colors.index(value)
-                self.x_offset = i*self._plotter['Pen Spacing']
-                self.rapid(x=self._plotter['Slot Zero'], z=self._plotter['Z-Stage'], comment="Stage to activate new pen")
-                self.rapid(z=self._plotter['Z-Click'], comment="Activate new pen")
-                self.rapid(z=self._plotter['Z-Stage'], comment="Return to pen change stage")
-                self.current_tool = value
-            elif value is None:
+            if value is None:
                 self.x_offset = 0;
-                self.rapid(x=self._plotter['Slot Zero'], comment="Rapid to Pen 0")
-            else:
-                raise ValueError(f"{RED}'{value}' is not a configured color.  Options are: {colors}" )
+                self.y_offset = 0;
+                self.rapid(x=self._plotter['Slot Zero'][0], y=self._plotter['Slot Zero'][1], comment="Rapid to Pen 0")
+                return self.current_tool
+            for row in self._plotter['Magazine']:
+                if value in row:
+                    i = row.index(value)
+                    j = self._plotter['Magazine'].index(row)
+                    self.x_offset = -i*self._plotter['Pen Spacing']
+                    self.y_offset = j*self._plotter['Pen Spacing']
+                    self.rapid(x=self._plotter['Slot Zero'][0], y=self._plotter['Slot Zero'][1], z=self._plotter['Z-Stage'], comment="Stage to activate new pen")
+                    self.rapid(z=self._plotter['Z-Click'], comment="Activate new pen")
+                    self.rapid(z=self._plotter['Z-Stage'], comment="Return to pen change stage")
+                    self.current_tool = value
+                    return self.current_tool
+            raise ValueError(f"{RED}'{value}' is not a configured color.  Options are: {self._plotter['Magazine']}" )
         else:
             raise ValueError(f"{RED}You must configure a Plotter before you can set pen_color{ENDC}")
