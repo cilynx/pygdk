@@ -393,14 +393,28 @@ class Machine:
 # Mill Drill - Helix-drill a hole up to 2x the diameter of the end mill used
 ################################################################################
 
-    def mill_drill(self, c_x, c_y, diameter, depth, z_step=0.1, retract=True):
+    def mill_drill(self, c_x, c_y, diameter, depth, z_step=0.1, outside=False, retract=True):
         print(f";{CYAN} Mill Drill | center: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, diameter: {diameter:.4f}, depth: {depth}, z_step: {z_step:.4f}{ENDC}")
-        if diameter < self.current_tool.diameter:
-            raise ValueError(f"{RED}Tool {self.current_tool.number} is too big ({self.current_tool.diameter:.4f} mm) to make this small ({diameter} mm) of a pocket{ENDC}")
-        if depth > self.current_tool.length:
-            raise ValueError(f"{RED}Tool {self.current_tool.number} is shorter ({self.current_tool.length:.4f} mm) than pocket is deep ({depth} mm){ENDC}")
         if diameter > 2 * self.current_tool.diameter:
-            raise ValueError(f"{RED}Tool {self.current_tool.number} is less than half as wide ({self.current_tool.diameter} mm) as the hole ({diameter} mm)")
+            raise ValueError(f"{RED}Tool {self.current_tool.number} ({self.current_tool.diameter:.4f} mm) is less than half as wide as the hole ({diameter} mm).  Use a larger endmill or make a pocket instead of mill-drilling.")
+        self.helix(c_x, c_y, diameter, depth, z_step, outside, retract)
+        print(f";{CYAN} Mill Drill | END{ENDC}")
+
+################################################################################
+# Helix - Helix-mill a circle with the cutter on either the inside (default)
+#         or outside of the requested diameter
+################################################################################
+
+    def helix(self, c_x, c_y, diameter, depth, z_step=0.1, outside=False, retract=True):
+        print(f";{CYAN} Helix | center: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, diameter: {diameter:.4f}, depth: {depth}, z_step: {z_step:.4f}{ENDC}")
+        if diameter < self.current_tool.diameter:
+            raise ValueError(f"{RED}Tool {self.current_tool.number} is too big ({self.current_tool.diameter:.4f} mm) to make this small ({diameter} mm) of a hole{ENDC}")
+        if depth > self.current_tool.length:
+            raise ValueError(f"{RED}Tool {self.current_tool.number} is shorter ({self.current_tool.length:.4f} mm) than the cut is deep ({depth} mm){ENDC}")
+        if z_step > depth:
+            raise ValueError(f"{RED}z_step cannot be greater than depth{ENDC}")
+        if outside:
+            diameter = -diameter
         self.absolute = True
         self.rapid(z=self.safe_z, comment="Rapid to Safe Z")
         self.rapid(c_x+diameter/2-self.current_tool.diameter/2, c_y, comment="Rapid to pocket offset")
@@ -409,8 +423,9 @@ class Machine:
         print(f"G2 Z{-depth} I{self.current_tool.diameter/2-diameter/2:.4f} J0 P{int(depth/z_step)} F{self.feed};{GREEN} Heli-drill{ENDC}")
         print(f"G2 I{self.current_tool.diameter/2-diameter/2:.4f} J0 P1 F{self.feed};{GREEN} Clean the bottom{ENDC}")
         if retract:
-            self.rapid(c_x, c_y, self.safe_z, comment="Retract")
-        print(f";{CYAN} Mill Drill | END{ENDC}")
+            self.rapid(z=self.safe_z, comment="Retract")
+            self.rapid(c_x, c_y, comment="Re-Center")
+        print(f";{CYAN} Helix | END{ENDC}")
 
 ################################################################################
 # Circular Pocket
