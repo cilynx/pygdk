@@ -202,6 +202,69 @@
     "diameter": 0.75,
     "description": "3/4\" Ball End Mill, 2 Flutes, 3/4\" Shank, HSS"
   },
+  "50": {
+    "units": "imperial",
+    "shape": "conical",
+    "length": 0.125,
+    "diameter": 0.25,
+    "description": "1/4\" 90-deg End Mill, 2 Flutes, 1/4\" Shank"
+  },
+  "51": {
+    "units": "imperial",
+    "shape": "conical",
+    "length": 0.216506,
+    "diameter": 0.25,
+    "description": "1/4\" 60-deg End Mill, 2 Flutes, 1/4\" Shank"
+  },
+  "52": {
+    "units": "imperial",
+    "shape": "conical",
+    "length": 1.25,
+    "diameter": 0.25,
+    "description": "1/4\" Taper Mill, 2 Flutes, 1/4\" Shank"
+  },
+  "60": {
+    "units": "imperial",
+    "shape": "cylindrical",
+    "length": 0.1875,
+    "diameter": 0.0625,
+    "description": "1/16\" Downcut, 2 Flutes, 1/4\" Shank"
+  },
+  "61": {
+    "units": "imperial",
+    "shape": "cylindrical",
+    "length": 1,
+    "diameter": 0.125,
+    "description": "1/8\" Downcut, 2 Flutes, 1/4\" Shank"
+  },
+  "62": {
+    "units": "imperial",
+    "shape": "cylindrical",
+    "length": 1,
+    "diameter": 0.25,
+    "description": "1/4\" Downcut, 2 Flutes, 1/4\" Shank"
+  },
+  "70": {
+    "units": "imperial",
+    "shape": "cylindrical",
+    "length": 0.1875,
+    "diameter": 0.0625,
+    "description": "1/16\" Upcut, 2 Flutes, 1/4\" Shank"
+  },
+  "71": {
+    "units": "imperial",
+    "shape": "cylindrical",
+    "length": 1,
+    "diameter": 0.125,
+    "description": "1/8\" Upcut, 2 Flutes, 1/4\" Shank"
+  },
+  "72": {
+    "units": "imperial",
+    "shape": "cylindrical",
+    "length": 1,
+    "diameter": 0.25,
+    "description": "1/4\" Upcut, 2 Flutes, 1/4\" Shank"
+  },
   "100": {
     "units": "metric",
     "shape": "cylindrical",
