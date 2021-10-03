@@ -138,4 +138,4 @@ dmypy.json
 cython_debug/
 
 # Generated G-code
-.nc
+*.nc
