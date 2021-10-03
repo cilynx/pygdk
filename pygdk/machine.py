@@ -4,6 +4,7 @@ import sys
 import math
 
 from .tool import Tool
+from .turtle import Turtle
 
 RED    = '\033[31m'
 ORANGE = '\033[91m'
@@ -60,6 +61,7 @@ class Machine:
         self._current_tool = None
         self._absolute = None
         self._feed = None
+        self._turtle = None
         print(f";{ORANGE} Initializing a {self.type} named {self.name}{ENDC}")
 
 ################################################################################
@@ -594,3 +596,12 @@ class Machine:
             raise ValueError(f"{RED}'{value}' is not a configured color.  Options are: {self._plotter['Magazine']}" )
         else:
             raise ValueError(f"{RED}You must configure a Plotter before you can set pen_color{ENDC}")
+
+################################################################################
+# Turtle Object Reference
+################################################################################
+
+    def turtle(self, x=0, y=0, z=0, mode='standard', verbose=False):
+        if not self._turtle:
+            self._turtle = Turtle(self, x, y, z, mode, verbose)
+        return self._turtle
