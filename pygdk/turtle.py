@@ -11,6 +11,7 @@ class Turtle:
 ################################################################################
 
     def __init__(self, machine, x=0, y=0, z=0, mode='standard', verbose=False):
+        self._pencolor = None
         self._verbose = verbose
         self._machine = machine
         self._isdown = False
@@ -298,6 +299,34 @@ class Turtle:
 
     pu = penup
     up = penup
+
+
+################################################################################
+# Turtle.pencolor(color=None)
+#
+# Return or set the pencolor.
+#
+# pencolor()
+#
+# Return the current pencolor as color specification string or as a tuple (see
+# example). May be used as input to another color/pencolor/fillcolor call.
+#
+# pencolor(colorstring)
+#
+# Set pencolor to colorstring, which is a color specification string, such as
+# "Red".  Colors must be defined in your plotter magazine in your machine JSON.
+#
+# TODO: Nearest color matching to enable the other standard modes.
+################################################################################
+
+    def pencolor(self, color=None):
+        if color is not None:
+            self._machine.pen_color = color
+            self._pencolor = color
+        self._machine.rapid(self._x, self._y, comment="Going back to Turtle's (x,y) after color change")
+        if self._isdown:
+            self.pendown()
+        return self._pencolor
 
 ################################################################################
 # Turtle.mode(mode=None)
