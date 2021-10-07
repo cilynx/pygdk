@@ -62,6 +62,12 @@ class Machine:
         self._absolute = None
         self._feed = None
         self._turtle = None
+        self._optimize = False
+        self._x = None
+        self._y = None
+        self._z = None
+        self._linear_moves = {}
+        self._optimize_tool = None
         print(f";{ORANGE} Initializing a {self.type} named {self.name}{ENDC}")
 
 ################################################################################
@@ -186,7 +192,7 @@ class Machine:
             self._current_tool = tool
             tool = self._current_tool.number
         else:
-            raise TypeError(f"{RED}Machine.current_tool must be set to an int, str, or Tool object{ENDC}")
+            raise TypeError(f"{RED}Machine.current_tool must be set to an int (Tool Number), str (Tool Description), or Tool object{ENDC}")
         if 'Sharpie' not in self._current_tool._description:
             print(f"M6 T{tool} ;{ORANGE} Select Tool {tool}{ENDC}")
         else:
@@ -337,7 +343,7 @@ class Machine:
     relative = incremental
 
 ################################################################################
-# Basic Linear Moves -- Rapid, iRapid, Cut, and iCut
+# Linear Moves -- Rapid, iRapid, Cut, and iCut
 ################################################################################
 
     def move(self, x=None, y=None, z=None, absolute=True, cut=False, comment=None):
@@ -352,12 +358,32 @@ class Machine:
         if x is None and y is None and z is None:
             raise ValueError(f"{RED}Machine.move requires at least one coordinate to move to{ENDC}")
         self.absolute = absolute
-        print("G1" if cut else "G0", end='')
-        if x is not None: print(f" X{x:.4f}", end='')
-        if y is not None: print(f" Y{y:.4f}", end='')
-        if z is not None: print(f" Z{z:.4f}", end='')
-        print(f" F{self.feed if cut else self.max_feed}", end='')
-        print(f" ;{GREEN} {comment}{ENDC}" if comment else '')
+        if self.absolute and self._optimize:
+            print(f";{RED} WARNING: Optimization currently only works with linear moves.  If you use complex operations, optimization WILL generate broken gcode.{ENDC}")
+            print(self._optimize_tool)
+            print([[self._x, self._y, self._z],[x,y,z]])
+            if x is not None:
+                self._x = x
+            if y is not None:
+                self._y = y
+            if z is not None:
+                self._z = z
+
+        elif self._optimize:
+            raise NotImplementedError(f"{RED}Optimizing relative moves is not yet implemented")
+        else:
+            print("G1" if cut else "G0", end='')
+            if x is not None:
+                print(f" X{x:.4f}", end='')
+                self._x = x
+            if y is not None:
+                print(f" Y{y:.4f}", end='')
+                self._y = y
+            if z is not None:
+                print(f" Z{z:.4f}", end='')
+                self._z = z
+            print(f" F{self.feed if cut else self.max_feed}", end='')
+            print(f" ;{GREEN} {comment}{ENDC}" if comment else '')
 
     rapid = move
 
@@ -569,7 +595,18 @@ class Machine:
 
     @pen_color.setter
     def pen_color(self, value):
-        if self._plotter:
+        if not self._plotter:
+            raise ValueError(f"{RED}You must configure a Plotter before you can set pen_color{ENDC}")
+
+        if self._optimize:
+            if value is None:
+                pass
+            elif any(value in row for row in self._plotter['Magazine']):
+                self._optimize_tool = value
+            else:
+                raise ValueError(f"{RED}'{value}' is not a configured color.  Options are: {self._plotter['Magazine']}" )
+
+        else:
             self.rapid(z=self._plotter['Z-Stage'], comment="Go to pen change staging height")
             if self.current_tool:
                 self.rapid(x=self._plotter['Slot Zero'][0], y=self._plotter['Slot Zero'][1], z=self._plotter['Z-Stage'], comment="Stage to retract current pen")
@@ -594,8 +631,6 @@ class Machine:
                     self.current_tool = value
                     return self.current_tool
             raise ValueError(f"{RED}'{value}' is not a configured color.  Options are: {self._plotter['Magazine']}" )
-        else:
-            raise ValueError(f"{RED}You must configure a Plotter before you can set pen_color{ENDC}")
 
 ################################################################################
 # Turtle Object Reference
