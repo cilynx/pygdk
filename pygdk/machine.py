@@ -66,7 +66,7 @@ class Machine:
         self._x = None
         self._y = None
         self._z = None
-        self._linear_moves = {}
+        self._linear_moves = {None:[]}
         self._optimize_tool = None
         print(f";{ORANGE} Initializing a {self.type} named {self.name}{ENDC}")
 
@@ -193,7 +193,7 @@ class Machine:
             tool = self._current_tool.number
         else:
             raise TypeError(f"{RED}Machine.current_tool must be set to an int (Tool Number), str (Tool Description), or Tool object{ENDC}")
-        if 'Sharpie' not in self._current_tool._description:
+        if 'Sharpie' not in self._current_tool._description or self._simulate:
             print(f"M6 T{tool} ;{ORANGE} Select Tool {tool}{ENDC}")
         else:
             print(f";{ORANGE} Select Tool {tool}{ENDC}")
@@ -359,16 +359,27 @@ class Machine:
             raise ValueError(f"{RED}Machine.move requires at least one coordinate to move to{ENDC}")
         self.absolute = absolute
         if self.absolute and self._optimize:
-            print(f";{RED} WARNING: Optimization currently only works with linear moves.  If you use complex operations, optimization WILL generate broken gcode.{ENDC}")
-            print(self._optimize_tool)
-            print([[self._x, self._y, self._z],[x,y,z]])
+#            print(self._optimize_tool)
+#            print([[self._x, self._y, self._z],[x,y,z]])
+            old_pos = [None, None, None]
+            new_pos = [None, None, None]
+
+            old_pos[0] = self._x
+            new_pos[0] = x if x is not None else self._x
             if x is not None:
                 self._x = x
+
+            old_pos[1] = self._y
+            new_pos[1] = y if y is not None else self._y
             if y is not None:
                 self._y = y
+
+            old_pos[2] = self._z
+            new_pos[2] = z if z is not None else self._z
             if z is not None:
                 self._z = z
 
+            self._linear_moves[self._optimize_tool].append([old_pos, new_pos])
         elif self._optimize:
             raise NotImplementedError(f"{RED}Optimizing relative moves is not yet implemented")
         else:
@@ -434,6 +445,8 @@ class Machine:
 ################################################################################
 
     def helix(self, c_x, c_y, diameter, depth, z_step=0.1, outside=False, retract=True):
+        if self._optimize:
+            raise ValueError(f"{RED}The _optimize option currently does not work with helix operations")
         print(f";{CYAN} Helix | center: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, diameter: {diameter:.4f}, depth: {depth}, z_step: {z_step:.4f}{ENDC}")
         if diameter < self.current_tool.diameter:
             raise ValueError(f"{RED}Tool {self.current_tool.number} is too big ({self.current_tool.diameter:.4f} mm) to make this small ({diameter} mm) of a hole{ENDC}")
@@ -461,6 +474,8 @@ class Machine:
 
     def circular_pocket(self, c_x, c_y, diameter, depth, step=None, finish=0.1, retract=True):
         print(f";{CYAN} Circular Pocket | center: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, diameter: {diameter:.4f}, depth: {depth}, step: {step}, finish: {finish}{ENDC}")
+        if self._optimize:
+            raise ValueError(f"{RED}The _optimize option currently does not work with circular operations")
         if step is None: step = self.current_tool.diameter/10
         if diameter > 2 * self.current_tool.diameter:
             drill_diameter = 2*self.current_tool.diameter - 2*finish
@@ -601,8 +616,16 @@ class Machine:
 
         if self._optimize:
             if value is None:
-                pass
+#                print(json.dumps(self._linear_moves, indent=4))
+                self._optimize = False
+                for color in self._linear_moves:
+                    if color:
+                        self.pen_color = color
+                        for move in self._linear_moves[color]:
+                            self.rapid(move[0][0], move[0][1], move[0][2], comment="Rapid to next start")
+                            self.cut(move[1][0], move[1][1], move[1][2], comment="Execute move")
             elif any(value in row for row in self._plotter['Magazine']):
+                self._linear_moves.setdefault(value,[])
                 self._optimize_tool = value
             else:
                 raise ValueError(f"{RED}'{value}' is not a configured color.  Options are: {self._plotter['Magazine']}" )
