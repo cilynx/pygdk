@@ -207,63 +207,90 @@
     "shape": "conical",
     "length": 0.125,
     "diameter": 0.25,
-    "description": "1/4\" 90-deg End Mill, 2 Flutes, 1/4\" Shank"
+    "description": "1/4\" 90-deg End Mill, 2 Flutes, 1/4\" Shank, Carbide"
   },
   "51": {
     "units": "imperial",
     "shape": "conical",
     "length": 0.216506,
     "diameter": 0.25,
-    "description": "1/4\" 60-deg End Mill, 2 Flutes, 1/4\" Shank"
+    "description": "1/4\" 60-deg End Mill, 2 Flutes, 1/4\" Shank, Carbide"
   },
   "52": {
     "units": "imperial",
     "shape": "conical",
     "length": 1.25,
     "diameter": 0.25,
-    "description": "1/4\" Taper Mill, 2 Flutes, 1/4\" Shank"
+    "description": "1/4\" Taper Mill, 2 Flutes, 1/4\" Shank, Carbide"
   },
   "60": {
     "units": "imperial",
     "shape": "cylindrical",
     "length": 0.1875,
     "diameter": 0.0625,
-    "description": "1/16\" Downcut, 2 Flutes, 1/4\" Shank"
+    "description": "1/16\" Downcut, 2 Flutes, 1/4\" Shank, Carbide"
   },
   "61": {
     "units": "imperial",
     "shape": "cylindrical",
     "length": 1,
     "diameter": 0.125,
-    "description": "1/8\" Downcut, 2 Flutes, 1/4\" Shank"
+    "description": "1/8\" Downcut, 2 Flutes, 1/4\" Shank, Carbide"
   },
   "62": {
     "units": "imperial",
     "shape": "cylindrical",
     "length": 1,
     "diameter": 0.25,
-    "description": "1/4\" Downcut, 2 Flutes, 1/4\" Shank"
+    "description": "1/4\" Downcut, 2 Flutes, 1/4\" Shank, Carbide",
+    "url": {
+      "Freud 76-102":     "https://amzn.to/301V46p",
+      "Yonico 32216-SC":  "https://amzn.to/3alm7eO",
+      "Bits & Bits":      "https://bitsbits.com/product/425-dnc250-down-cut/",
+      "Bosch 85903M":     "https://amzn.to/2WSYIOV"
+    },
+    "rpm": {
+      "Soft Wood":  [16000, 18000],
+      "Hard Wood":  [16000, 18000],
+      "Plywood":    [16000, 18000],
+      "MDF":        [16000, 18000],
+      "Laminate":   [16000, 18000]
+    },
+    "ipm": {
+      "Soft Wood":  [50,60],
+      "Hard Wood":  [50,60],
+      "Plywood":    [50,60],
+      "MDF":        [100,110],
+      "Laminate":   [100,110]
+    },
+    "ramp_down": {
+      "Soft Wood":  [25,30],
+      "Hard Wood":  [25,30],
+      "Plywood":    [25,30],
+      "MDF":        [50,55],
+      "Laminate":   [50,55]
+    }
   },
   "70": {
     "units": "imperial",
     "shape": "cylindrical",
     "length": 0.1875,
     "diameter": 0.0625,
-    "description": "1/16\" Upcut, 2 Flutes, 1/4\" Shank"
+    "description": "1/16\" Upcut, 2 Flutes, 1/4\" Shank, Carbide"
   },
   "71": {
     "units": "imperial",
     "shape": "cylindrical",
     "length": 1,
     "diameter": 0.125,
-    "description": "1/8\" Upcut, 2 Flutes, 1/4\" Shank"
+    "description": "1/8\" Upcut, 2 Flutes, 1/4\" Shank, Carbide"
   },
   "72": {
     "units": "imperial",
     "shape": "cylindrical",
     "length": 1,
     "diameter": 0.25,
-    "description": "1/4\" Upcut, 2 Flutes, 1/4\" Shank"
+    "description": "1/4\" Upcut, 2 Flutes, 1/4\" Shank, Carbide"
   },
   "100": {
     "units": "metric",

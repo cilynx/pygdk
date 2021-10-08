@@ -10,6 +10,8 @@ class Tool:
 
     def __init__(self, machine, dict=None, i=None):
         if dict and i:
+            self._rpm = dict.get('rpm', None)
+            self._ipm = dict.get('ipm', None)
             self._units = dict.get('units', None)
             self._shape = dict.get('shape', None)
             self._length = dict.get('length', None)
@@ -62,3 +64,35 @@ class Tool:
     def length(self, value):
         self._length = value
         print(f";{YELLOW} Setting Tool Length: {self.length} mm | {self.length/25.4}\"{ENDC}")
+
+################################################################################
+# Tool.flutes -- Number of Flutes
+################################################################################
+
+    @property
+    def flutes(self):
+        return int(self._description.split(',')[1].replace('Flutes',''))
+
+################################################################################
+# Tool.material -- HSS, Carbide, etc.
+################################################################################
+
+    @property
+    def material(self):
+        return self._description.split(',')[3].strip()
+
+################################################################################
+# Tool.ipm -- Manufacturer-Recommended Inches-Per-Minute Feed
+################################################################################
+
+    @property
+    def ipm(self):
+        return self._ipm
+
+################################################################################
+# Tool.rpm -- Manufacturer-Recommended Spindle RPM
+################################################################################
+
+    @property
+    def rpm(self):
+        return self._rpm

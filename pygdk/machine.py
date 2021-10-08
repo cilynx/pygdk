@@ -68,6 +68,7 @@ class Machine:
         self._z = None
         self._linear_moves = {None:[]}
         self._optimize_tool = None
+        self._material = None
         print(f";{ORANGE} Initializing a {self.type} named {self.name}{ENDC}")
 
 ################################################################################
@@ -202,6 +203,44 @@ class Machine:
         self.current_tool = tool
 
 ################################################################################
+# Machine.material -- Workpiece material.  Still thinking about a separate class
+################################################################################
+
+    @property
+    def material(self):
+        return self._material
+
+    @material.setter
+    def material(self,value):
+        self._material = value
+        fas_file = 'feeds-and-speeds.json'
+        if os.path.exists(fas_file):
+            with open(fas_file, 'r') as fas:
+                self._fas = json.load(fas)
+        sfm = self._fas['SFM']
+        chipload = self._fas['Chipload']
+        cutter = self.current_tool.material
+        if value in sfm[cutter] and value in chipload:
+            print(f";{YELLOW} Workpiece is {value}{ENDC}")
+
+            if self.current_tool.rpm:
+                rpm = (self.current_tool.rpm[value][0]+self.current_tool.rpm[value][1])/2
+                print(f";{ORANGE} Using tool manufacturer recommended spindle RPM: {rpm:.4f} rpm{ENDC}")
+                self.rpm = rpm
+            else:
+                self.css = (sfm[cutter][value][0]+sfm[cutter][value][1])/2/196.85
+
+            if self.current_tool.ipm:
+                ipm = (self.current_tool.ipm[value][0]+self.current_tool.ipm[value][1])/2
+                print(f";{ORANGE} Using tool manufacturer recommended feed: {ipm:.4f} in/min{ENDC}")
+                self.feed = ipm*25.4
+            else:
+                print(f";{ORANGE} No manufacturer-recommended IPM Feed.  Calculating.{ENDC}")
+                cl_range = chipload[value][f"{self.current_tool.diameter/25.4:.3f}"]
+                cl_mean = (cl_range[0]+cl_range[1])/2
+                self.feed = self.rpm * self.current_tool.flutes * cl_mean * 25.4
+
+################################################################################
 # Machine.safe_z -- This probably belongs in a Workpiece class, not here
 ################################################################################
 
@@ -254,7 +293,7 @@ class Machine:
     @feed.setter
     def feed(self, feed):
         self._feed = feed
-        print(f";{YELLOW} Using Machine Feed: {self.feed:.4f} mm/min{ENDC}")
+        print(f";{YELLOW} Using Machine Feed: {self.feed:.4f} mm/min | {self.feed/25.4:.4f} in/min | {self.feed/25.4/12:.4f} ft/min{ENDC}")
 
 ################################################################################
 # Machine.css - Constant Surface Speed
@@ -266,15 +305,16 @@ class Machine:
 
     @css.setter
     def css(self, value):
-        print(f";{YELLOW} Desired Constant Surface Speed (CSS): {value} m/s | {value*196.85:.4f} ft/min{ENDC}")
+        print(f";{YELLOW} Desired Constant Surface Speed (CSS): {value:.4f} m/s | {value*196.85:.4f} ft/min{ENDC}")
         if self.type == "Mill":
-            print(f";{ORANGE} Calculating RPM from CSS and tool diameter.{ENDC}")
+            print(f";{YELLOW} Calculating RPM from CSS and tool diameter.")
             rpm = value * 60000 / math.pi / self.current_tool.diameter
             if rpm > self.max_rpm:
                 css = self.max_rpm * math.pi * self.current_tool.diameter / 60000
                 print(f";{RED} {self.name} cannot do {rpm:.4f} rpm.  Maxing out at {self.max_rpm} rpm | {css:.4f} m/s | {css*196.85:.4f} ft/min{ENDC}")
                 rpm = self.max_rpm;
-            self.rpm = rpm
+            print(f";{YELLOW} Setting RPM: {rpm:.4f}{ENDC}")
+            self._rpm = rpm
 
     surface_speed = css
 
@@ -292,9 +332,9 @@ class Machine:
             raise ValueError(f"Machine.rpm ({value}) must be lower than Machine.max_rpm ({self.max_rpm})")
         self._rpm = value
         print(f"G97 ;{YELLOW} Constant Spindle Speed Mode{ENDC}")
-        print(f";{YELLOW} Using Spindle RPM: {value:.4f}{ENDC}")
+        print(f"S{value:.4f} ;{YELLOW} Using Spindle RPM: {value:.4f}{ENDC}")
         # print(f"S{value}")
-        print(f";{ORANGE} Calculating CSS from RPM and tool diameter.{ENDC}")
+        print(f";{YELLOW} Calculating CSS from RPM and tool diameter.{ENDC}")
         if self.current_tool.diameter is not None:
             self._css = self.rpm * math.pi * self.current_tool.diameter / 60000
             print(f";{YELLOW} Calculated Tool Constant Surface Speed (CSS): {self.css:.4f} m/s | {self.css*196.85:.4f} ft/min{ENDC}")
@@ -304,7 +344,7 @@ class Machine:
         flutes = 4 # TODO: Parameterize this
         if chip_load is not None:
             feed = chip_load * flutes * self.rpm # mm/min
-            print(f";{ORANGE} Calculated feed from chip load, flutes, and RPM: {feed:.4f} mm/min | {feed/304.8:.4f} ft/min{ENDC}")
+            print(f";{YELLOW} Calculated feed from chip load, flutes, and RPM: {feed:.4f} mm/min | {feed/304.8:.4f} ft/min{ENDC}")
             if feed > self.max_feed:
                 print(f";{RED} {self.name} cannot feed at {feed:.4f} mm/min.  Maxing out at {self.max_feed} mm/min{ENDC}")
                 feed = self.max_feed
