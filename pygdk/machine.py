@@ -63,12 +63,15 @@ class Machine:
         self._feed = None
         self._turtle = None
         self._optimize = False
-        self._x = None
-        self._y = None
-        self._z = None
+        self._x = 0
+        self._y = 0
+        self._z = 0
         self._linear_moves = {None:[]}
         self._optimize_tool = None
         self._material = None
+        self._x_clear = None
+        self._y_clear = None
+        self._z_clear = None
         print(f";{YELLOW} Initializing a {self.type} named {self.name}{ENDC}")
 
 ################################################################################
@@ -194,7 +197,19 @@ class Machine:
             tool = self._current_tool.number
         else:
             raise TypeError(f"{RED}Machine.current_tool must be set to an int (Tool Number), str (Tool Description), or Tool object{ENDC}")
-        if 'Sharpie' not in self._current_tool._description or self._simulate:
+        if 'Sharpie' not in self.current_tool._description or self._simulate:
+            position = [self._x, self._y, self._z]
+            self.rapid(z=0, machine_coord=True, comment="Fully retracting")
+            if self._y_clear is not None:
+                self.rapid(y=self._y_clear, comment="Clearing to _y_clear")
+            self.rapid(x=0, machine_coord=True, comment="Zeroing left")
+            self.rapid(y=0, machine_coord=True, comment="Zeroing forward")
+            self.pause(self.current_tool._description)
+            if self._y_clear is not None:
+                self.rapid(y=self._y_clear)
+            self.rapid(x=position[0])
+            self.rapid(y=position[1])
+#            self.rapid(z=-10, machine_coord=True)
             print(f"M6 T{tool} ;{GREEN} Select Tool {tool}{ENDC}")
         else:
             print(f";{YELLOW} Select Tool {tool}{ENDC}")
@@ -400,7 +415,7 @@ class Machine:
 # Linear Moves -- Rapid, iRapid, Cut, and iCut
 ################################################################################
 
-    def move(self, x=None, y=None, z=None, absolute=True, cut=False, comment=None):
+    def move(self, x=None, y=None, z=None, absolute=True, machine_coord=False, cut=False, comment=None):
 #        print(f";{GREEN} Cut:{cut}, X:{x}, Y:{y}, Z:{z}, ABS:{absolute}{ENDC}")
         if x is not None:
             x = x+self.x_offset
@@ -437,7 +452,8 @@ class Machine:
         elif self._optimize:
             raise NotImplementedError(f"{RED}Optimizing relative moves is not yet implemented")
         else:
-            print("G1" if cut else "G0", end='')
+            G = 'G53 G' if machine_coord else 'G'
+            print(f"{G}1" if cut else f"{G}0", end='')
             if x is not None:
                 print(f" X{x:.4f}", end='')
                 self._x = x
@@ -463,6 +479,9 @@ class Machine:
 
     def retract(self, comment=None):
         self.move(z=self.safe_z, comment=comment)
+
+    def full_retract(self, comment=None):
+        self.move(z=0, machine_coord=True, comment=comment)
 
 ################################################################################
 # Machine.bolt_circle() -- Make a Bolt Circle
@@ -784,3 +803,23 @@ class Machine:
 
     def turtle(self, x=0, y=0, z=0, z_draw=0, mode='standard', verbose=False):
         return Turtle(self, x, y, z, z_draw, mode, verbose)
+
+################################################################################
+# Modal State -- M70, M71, M72
+################################################################################
+
+    def save_modal_state(self):
+        print(f"M70 ;{GREEN} Save Modal State")
+
+    def invalidate_modal_state(self):
+        print(f"M71 ;{GREEN} Invalidate Modal State")
+
+    def restore_modal_state(self):
+        print(f"M72 ;{GREEN} Restore Modal State")
+
+################################################################################
+# Modal State -- M70, M71, M72
+################################################################################
+
+    def pause(self, msg="Paused, Click Done to resume"):
+        print(f"M0 (MSG, {msg})")
