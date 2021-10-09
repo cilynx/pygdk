@@ -26,7 +26,7 @@ class Machine:
         if os.path.exists(name):
             if type is not None or max_feed is not None:
                 raise ValueError(f"Machine must be initialized by JSON or parameters, but not both")
-            print(f";{ORANGE} Loading Machine parameters from JSON{ENDC}")
+            print(f";{YELLOW} Loading Machine parameters from JSON{ENDC}")
             with open(name) as f:
                 dict = json.load(f)
                 name = dict['Name']
@@ -69,7 +69,7 @@ class Machine:
         self._linear_moves = {None:[]}
         self._optimize_tool = None
         self._material = None
-        print(f";{ORANGE} Initializing a {self.type} named {self.name}{ENDC}")
+        print(f";{YELLOW} Initializing a {self.type} named {self.name}{ENDC}")
 
 ################################################################################
 # Persist Machine parameters as JSON
@@ -127,7 +127,7 @@ class Machine:
 
     @type.setter
     def name (self, value):
-        print(f";{ORANGE} Setting {self.name} machine type: {value}{ENDC}")
+        print(f";{YELLOW} Setting {self.name} machine type: {value}{ENDC}")
         self._type = value
 
 ################################################################################
@@ -140,7 +140,7 @@ class Machine:
 
     @name.setter
     def name (self, value):
-        print(f";{ORANGE} Renaming {self.name}: {value}{ENDC}")
+        print(f";{YELLOW} Renaming {self.name}: {value}{ENDC}")
         self._name = value
 
 ################################################################################
@@ -153,7 +153,7 @@ class Machine:
 
     @x_offset.setter
     def x_offset (self, value):
-        print(f";{ORANGE} Setting x_offset: {value}{ENDC}")
+        print(f";{YELLOW} Setting x_offset: {value}{ENDC}")
         self._x_offset = value
 
     @property
@@ -162,7 +162,7 @@ class Machine:
 
     @y_offset.setter
     def y_offset (self, value):
-        print(f";{ORANGE} Setting y_offset: {value}{ENDC}")
+        print(f";{YELLOW} Setting y_offset: {value}{ENDC}")
         self._y_offset = value
 
     @property
@@ -171,7 +171,7 @@ class Machine:
 
     @z_offset.setter
     def z_offset (self, value):
-        print(f";{ORANGE} Setting z_offset: {value}{ENDC}")
+        print(f";{YELLOW} Setting z_offset: {value}{ENDC}")
         self._z_offset = value
 
 ################################################################################
@@ -195,9 +195,11 @@ class Machine:
         else:
             raise TypeError(f"{RED}Machine.current_tool must be set to an int (Tool Number), str (Tool Description), or Tool object{ENDC}")
         if 'Sharpie' not in self._current_tool._description or self._simulate:
-            print(f"M6 T{tool} ;{ORANGE} Select Tool {tool}{ENDC}")
+            print(f"M6 T{tool} ;{GREEN} Select Tool {tool}{ENDC}")
         else:
-            print(f";{ORANGE} Select Tool {tool}{ENDC}")
+            print(f";{YELLOW} Select Tool {tool}{ENDC}")
+        if self.material:
+            self.update_fas()
 
     def select_tool(self, tool):
         self.current_tool = tool
@@ -213,32 +215,44 @@ class Machine:
     @material.setter
     def material(self,value):
         self._material = value
-        fas_file = 'feeds-and-speeds.json'
-        if os.path.exists(fas_file):
-            with open(fas_file, 'r') as fas:
-                self._fas = json.load(fas)
-        sfm = self._fas['SFM']
-        chipload = self._fas['Chipload']
-        cutter = self.current_tool.material
-        if value in sfm[cutter] and value in chipload:
-            print(f";{YELLOW} Workpiece is {value}{ENDC}")
+        if self.current_tool:
+            self.update_fas()
 
-            if self.current_tool.rpm:
-                rpm = (self.current_tool.rpm[value][0]+self.current_tool.rpm[value][1])/2
-                print(f";{ORANGE} Using tool manufacturer recommended spindle RPM: {rpm:.4f} rpm{ENDC}")
-                self.rpm = rpm
-            else:
-                self.css = (sfm[cutter][value][0]+sfm[cutter][value][1])/2/196.85
+################################################################################
+# Feeds and Speeds
+################################################################################
 
-            if self.current_tool.ipm:
-                ipm = (self.current_tool.ipm[value][0]+self.current_tool.ipm[value][1])/2
-                print(f";{ORANGE} Using tool manufacturer recommended feed: {ipm:.4f} in/min{ENDC}")
-                self.feed = ipm*25.4
-            else:
-                print(f";{ORANGE} No manufacturer-recommended IPM Feed.  Calculating.{ENDC}")
-                cl_range = chipload[value][f"{self.current_tool.diameter/25.4:.3f}"]
-                cl_mean = (cl_range[0]+cl_range[1])/2
-                self.feed = self.rpm * self.current_tool.flutes * cl_mean * 25.4
+    def update_fas(self):
+        if self.material and self.current_tool:
+            fas_file = 'feeds-and-speeds.json'
+            if os.path.exists(fas_file):
+                with open(fas_file, 'r') as fas:
+                    self._fas = json.load(fas)
+            sfm = self._fas['SFM']
+            chipload = self._fas['Chipload']
+            cutter = self.current_tool.material
+            if self.material in sfm[cutter] and self.material in chipload:
+                print(f";{YELLOW} Workpiece is {self.material}{ENDC}")
+
+                if self.current_tool.rpm:
+                    rpm = (self.current_tool.rpm[self.material][0]+self.current_tool.rpm[self.material][1])/2
+                    print(f";{YELLOW} Using tool manufacturer recommended spindle RPM: {rpm:.4f} rpm{ENDC}")
+                    self.rpm = rpm
+                else:
+                    self.css = (sfm[cutter][self.material][0]+sfm[cutter][self.material][1])/2/196.85
+
+                if self.current_tool.ipm:
+                    ipm = (self.current_tool.ipm[self.material][0]+self.current_tool.ipm[self.material][1])/2
+                    print(f";{YELLOW} Using tool manufacturer recommended feed: {ipm:.4f} in/min{ENDC}")
+                    self.feed = ipm*25.4
+                else:
+                    print(f";{YELLOW} No manufacturer-recommended IPM Feed.  Calculating.{ENDC}")
+                    cl_range = chipload[self.material].get(f"{self.current_tool.diameter/25.4:.3f}", None)
+                    if cl_range:
+                        cl_mean = (cl_range[0]+cl_range[1])/2
+                        self.feed = self.rpm * self.current_tool.flutes * cl_mean * 25.4
+                    else:
+                        print(f";{RED} Tool not available in chipload table.  You're on your own for feeds and speeds.{ENDC}")
 
 ################################################################################
 # Machine.safe_z -- This probably belongs in a Workpiece class, not here
@@ -250,7 +264,7 @@ class Machine:
 
     @safe_z.setter
     def safe_z(self, value):
-        print(f";{ORANGE} Setting {self.name} Safe Z: {value}{ENDC}")
+        print(f";{YELLOW} Setting {self.name} Safe Z: {value}{ENDC}")
         self._safe_z = value
 
 ################################################################################
@@ -263,7 +277,7 @@ class Machine:
 
     @max_rpm.setter
     def max_rpm(self, value):
-        print(f";{ORANGE} Setting {self.name} max Spindle RPM: {value}{ENDC}")
+        print(f";{YELLOW} Setting {self.name} max Spindle RPM: {value}{ENDC}")
         self._max_rpm = value
 
 ################################################################################
@@ -276,7 +290,7 @@ class Machine:
 
     @max_feed.setter
     def max_feed(self, value):
-        print(f";{ORANGE} Setting {self.name} max Feed: {value}mm/min{ENDC}")
+        print(f";{YELLOW} Setting {self.name} max Feed: {value}mm/min{ENDC}")
         self._max_feed = value
 
 ################################################################################
@@ -331,8 +345,8 @@ class Machine:
         if value > self.max_rpm:
             raise ValueError(f"Machine.rpm ({value}) must be lower than Machine.max_rpm ({self.max_rpm})")
         self._rpm = value
-        print(f"G97 ;{YELLOW} Constant Spindle Speed Mode{ENDC}")
-        print(f"S{value:.4f} ;{YELLOW} Using Spindle RPM: {value:.4f}{ENDC}")
+        print(f"G97 ;{GREEN} Constant Spindle Speed Mode{ENDC}")
+        print(f"S{value:.4f} ;{GREEN} Using Spindle RPM: {value:.4f}{ENDC}")
         # print(f"S{value}")
         print(f";{YELLOW} Calculating CSS from RPM and tool diameter.{ENDC}")
         if self.current_tool.diameter is not None:
@@ -508,6 +522,8 @@ class Machine:
             self.rapid(c_x, c_y, comment="Re-Center")
         print(f";{CYAN} Helix | END{ENDC}")
 
+    circle = helix
+
 ################################################################################
 # Circular Pocket
 ################################################################################
@@ -564,6 +580,70 @@ class Machine:
         print(f";{CYAN} Pocket Circle | END{ENDC}")
 
 ################################################################################
+# Rectangular Frame
+################################################################################
+
+    def frame(self, c_x, c_y, x, y, depth, z_step=None, outside=True, retract=True, c='center', r=None, r_steps=10, feature=None):
+        if feature:
+            print(f";{ORANGE} {feature}{ENDC}")
+        print(f";{CYAN} Rectangular Frame | [c_x,c_y]: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, x: {x:.4f}, y: {y:.4f}, depth: {depth}, z_step: {z_step}, outside: {outside}, c: {c}, r: {r}{ENDC}")
+
+        if r is None:
+            r = 0 if outside else self.current_tool.radius
+        if not outside and r < self.current_tool.radius:
+            raise ValueError(f"{RED}Tool radius ({self.current_tool.radius} mm) is larger than requested inside corner radius ({r} mm)")
+
+        if not self.current_tool:
+            raise ValueError(f"{RED}You can't cut a frame without selecting a tool first")
+        if depth > self.current_tool.length:
+            raise ValueError(f"{RED}Tool {self.current_tool.number} is shorter ({self.current_tool.length:.4f} mm) than frame is deep ({depth} mm){ENDC}")
+
+        if not z_step:
+            z_step = self.current_tool.diameter
+        if z_step > depth:
+            z_step = depth
+        passes = math.ceil(depth/z_step)
+        z_step = depth/passes
+
+        flx = c_x
+        fly = c_y
+        if c.lower() == 'center':
+            flx = c_x-x/2
+            fly = c_y-y/2
+        elif c.lower() == 'fr':
+            flx = c_x-x
+        elif c.lower() == 'rl':
+            fly = c_y+y
+        elif c.lower() == 'rr':
+            flx = c_x-x
+            fly = c_y+y
+        elif c is not None and c.lower() != 'fl':
+            raise ValueError(f"{RED}Corner must be 'FL','FR','RL','RR', or 'Center'{ENDC}")
+
+        tool_d = self.current_tool.diameter if outside else -self.current_tool.diameter
+
+        turtle = self.turtle(verbose=True)
+        turtle.penup()
+        turtle.goto(flx+r, fly-tool_d/2, comment="Rapid to front-left corner:")
+        turtle.pendown()
+        for i in range(passes+1):
+            if i == passes:
+                z_step = 0
+            turtle.forward(x-2*r, -z_step/4)
+            turtle.circle(radius=r+tool_d/2, extent=90, steps=r_steps) # TODO: Implement smooth Turtle circles and drop the steps here
+            turtle.forward(y-2*r, -z_step/4)
+            turtle.circle(radius=r+tool_d/2, extent=90, steps=r_steps)
+            turtle.forward(x-2*r, -z_step/4)
+            turtle.circle(radius=r+tool_d/2, extent=90, steps=r_steps)
+            turtle.forward(y-2*r, -z_step/4)
+            turtle.circle(radius=r+tool_d/2, extent=90, steps=r_steps)
+
+        self.retract()
+        print(f";{CYAN} End Rectangular Frame{ENDC}")
+
+    rectangle = frame
+
+################################################################################
 # Rectangular Pocket
 ################################################################################
 
@@ -591,6 +671,8 @@ class Machine:
         ramp_step = rough_depth / ramp_passes
         assert ramp_step <= step
         spiral_passes = 2*math.ceil((rough_x-ramp_x-self.current_tool.diameter)/step/2)
+        if spiral_passes == 0:
+            spiral_passes = 1
         spiral_step = (rough_x-ramp_x-self.current_tool.diameter)/spiral_passes
         assert spiral_step <= step
         self.retract(comment="Retract")
@@ -700,7 +782,5 @@ class Machine:
 # Turtle Object Reference
 ################################################################################
 
-    def turtle(self, x=0, y=0, z=0, mode='standard', verbose=False):
-        if not self._turtle:
-            self._turtle = Turtle(self, x, y, z, mode, verbose)
-        return self._turtle
+    def turtle(self, x=0, y=0, z=0, z_draw=0, mode='standard', verbose=False):
+        return Turtle(self, x, y, z, z_draw, mode, verbose)
