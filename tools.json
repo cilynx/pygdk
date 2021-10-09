@@ -240,9 +240,11 @@
   "62": {
     "units": "imperial",
     "shape": "cylindrical",
-    "length": 1,
+    "length": 1.5,
     "diameter": 0.25,
     "description": "1/4\" Downcut, 2 Flutes, 1/4\" Shank, Carbide",
+    "flutes": 2,
+    "flute-length": 1,
     "url": {
       "Freud 76-102":     "https://amzn.to/301V46p",
       "Yonico 32216-SC":  "https://amzn.to/3alm7eO",
