@@ -39,7 +39,7 @@ class Tool:
 
     @property
     def diameter(self):
-        if hasattr(self, '_diameter') and self._diameter is not None:
+        if self._diameter is not None:
             return self._diameter * (25.4 if self._units == 'imperial' else 1)
         else:
             return ValueError(f"{RED}Tool.diameter must be set (directly or indirectly) before it is referenced{ENDC}")
@@ -48,6 +48,14 @@ class Tool:
     def diameter(self, value):
         self._diameter = value
         print(f";{YELLOW} Setting Tool Diameter: {self.diameter} mm | {self.diameter/25.4}\"{ENDC}")
+
+    @property
+    def radius(self):
+        return self.diameter/2
+
+    @radius.setter
+    def radius(self, value):
+        self.diameter = 2*value
 
 ################################################################################
 # Tool.length -- Length of the Tool
