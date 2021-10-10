@@ -15,9 +15,11 @@ class Tool:
             self._units = dict.get('units', None)
             self._shape = dict.get('shape', None)
             self._shank = dict.get('shank', None)
+            self._flutes = dict.get('flutes', None)
             self._length = dict.get('length', None)
             self._diameter = dict.get('diameter', None)
             self._description = dict.get('description', None)
+            self._flute_length = dict.get('flute_length', None)
             self._number = i
             diameter = self._diameter * (25.4 if self._units == 'imperial' else 1)
             print(f";{YELLOW} Looking up Tool {i} in Tool Table: [{self._description}] | {diameter:.4f} mm{ENDC}")
@@ -71,13 +73,13 @@ class Tool:
         print(f";{YELLOW} Setting Tool Shank: {self.shank} mm | {self.shank/25.4}\"{ENDC}")
 
 ################################################################################
-# Tool.length -- Length of the Tool
+# Tool Length
 ################################################################################
 
     @property
     def length(self):
-        if hasattr(self, '_length') and self._length is not None:
-            return self._length * (25.4 if self._units == 'imperial' else 1)
+        if self._length is not None:
+            return self._length * 25.4 if self._units == 'imperial' else self._length
         else:
             return ValueError(f"{RED}Tool.length must be set (directly or indirectly) before it is referenced{ENDC}")
 
@@ -85,6 +87,20 @@ class Tool:
     def length(self, value):
         self._length = value
         print(f";{YELLOW} Setting Tool Length: {self.length} mm | {self.length/25.4}\"{ENDC}")
+
+    @property
+    def flute_length(self):
+        if self._flute_length is not None:
+            return self._flute_length * 25.4 if self._units == 'imperial' else self._flute_length
+
+    @flute_length.setter
+    def flute_length(self, value):
+        self._flute_length = value
+        print(f";{YELLOW} Setting Tool Flute Length: {self.flute_length} mm | {self.flute_length/25.4}\"{ENDC}")
+
+    @property
+    def max_depth(self):
+        return self.flute_length if self.shank > self.diameter else self.length
 
 ################################################################################
 # Tool.flutes -- Number of Flutes
