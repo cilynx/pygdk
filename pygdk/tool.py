@@ -14,6 +14,7 @@ class Tool:
             self._ipm = dict.get('ipm', None)
             self._units = dict.get('units', None)
             self._shape = dict.get('shape', None)
+            self._shank = dict.get('shank', None)
             self._length = dict.get('length', None)
             self._diameter = dict.get('diameter', None)
             self._description = dict.get('description', None)
@@ -34,7 +35,7 @@ class Tool:
         self._number = number
 
 ################################################################################
-# Tool.diameter -- Diameter of the Tool
+# Tool Diameter
 ################################################################################
 
     @property
@@ -56,6 +57,18 @@ class Tool:
     @radius.setter
     def radius(self, value):
         self.diameter = 2*value
+
+    @property
+    def shank(self):
+        if self._shank is not None:
+            return self._shank
+        else:
+            return ValueError(f"{RED}Tool.shank must be set (directly or indirectly) before it is referenced{ENDC}")
+
+    @shank.setter
+    def shank(self, value):
+        self._shank = value
+        print(f";{YELLOW} Setting Tool Shank: {self.shank} mm | {self.shank/25.4}\"{ENDC}")
 
 ################################################################################
 # Tool.length -- Length of the Tool
