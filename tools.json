@@ -244,7 +244,7 @@
     "diameter": 0.25,
     "description": "1/4\" Downcut, 2 Flutes, 1/4\" Shank, Carbide",
     "flutes": 2,
-    "flute-length": 1,
+    "flute_length": 1,
     "url": {
       "Freud 76-102":     "https://amzn.to/301V46p",
       "Yonico 32216-SC":  "https://amzn.to/3alm7eO",
@@ -349,5 +349,27 @@
     "length": 1,
     "diameter": 1,
     "description": "Sharpie, Ultra Fine, Orange"
+  },
+  "150": {
+    "units": "imperial",
+    "shape": "ballnose",
+    "length": 1.25,
+    "flutes": 2,
+    "flute_length": 0.75,
+    "diameter": 0.5,
+    "shank": 0.25,
+    "material": "HSS",
+    "description": "1/2\" Round Nose Router Bit, 2 Flutes, 1/4\" Shank, Carbide"
+  },
+  "151": {
+    "units": "imperial",
+    "shape": "ballnose",
+    "length": 1.25,
+    "flutes": 2,
+    "flute_length": 0.75,
+    "diameter": 0.375,
+    "shank": 0.25,
+    "material": "HSS",
+    "description": "3/8\" Round Nose Router Bit, 2 Flutes, 1/4\" Shank, Carbide"
   }
 }
