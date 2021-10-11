@@ -190,20 +190,24 @@ class Machine:
             self._tool = tool
             tool = self._tool.number
         else:
-            position = [self._x, self._y, self._z]
-            self.rapid(z=0, machine_coord=True, comment="Fully retracting")
-            if self._y_clear is not None:
-                self.rapid(y=self._y_clear, comment="Clearing to _y_clear")
-            self.rapid(x=0, machine_coord=True, comment="Zeroing left")
-            self.rapid(y=0, machine_coord=True, comment="Zeroing forward")
-            self.pause(self.current_tool._description)
-            if self._y_clear is not None:
-                self.rapid(y=self._y_clear)
-            self.rapid(x=position[0])
-            self.rapid(y=position[1])
-#            self.rapid(z=-10, machine_coord=True)
             raise TypeError(f"{RED}Machine.tool must be set to an int (Tool Number), str (Tool Description), or Tool object{ENDC}")
         if 'Sharpie' not in self.tool._description or self._simulate:
+            if previous_tool is None:
+                print(f";{CYAN} Assuming first tool is already loaded{ENDC}")
+            else:
+                print(f";{CYAN} Coming around for Tool Change{ENDC}")
+                position = [self._x, self._y, self._z]
+                self.full_retract()
+                if self._y_clear is not None:
+                    self.rapid(y=self._y_clear, comment="Clearing to _y_clear")
+                self.rapid(x=0, machine_coord=True, comment="Zero left")
+                self.rapid(y=0, machine_coord=True, comment="Zero forward")
+                self.pause(self.tool._description)
+                if self._y_clear is not None:
+                    self.rapid(y=self._y_clear)
+                self.rapid(x=position[0])
+                self.rapid(y=position[1])
+    #            self.rapid(z=-10, machine_coord=True)
             print(f"M6 T{tool} ;{GREEN} Select Tool {tool}{ENDC}")
         else:
             print(f";{YELLOW} Select Tool {tool}{ENDC}")
