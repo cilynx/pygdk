@@ -207,6 +207,7 @@ class Machine:
             print(f"M6 T{tool} ;{GREEN} Select Tool {tool}{ENDC}")
         else:
             print(f";{YELLOW} Select Tool {tool}{ENDC}")
+        print(f";{CYAN} End Tool Change{ENDC}")
         if self.material:
             self.update_fas()
 
@@ -223,6 +224,7 @@ class Machine:
         self._material = value
         if self.tool:
             self.update_fas()
+        return self.material
 
 ################################################################################
 # Feeds and Speeds
@@ -333,7 +335,7 @@ class Machine:
                 css = self.max_rpm * math.pi * self.tool.diameter / 60000
                 print(f";{RED} {self.name} cannot do {rpm:.4f} rpm.  Maxing out at {self.max_rpm} rpm | {css:.4f} m/s | {css*196.85:.4f} ft/min{ENDC}")
                 rpm = self.max_rpm;
-            print(f";{YELLOW} Setting RPM: {rpm:.4f}{ENDC}")
+            print(f";{YELLOW} Setting RPM: {rpm:.4f} | {rpm/60:.4f} Hz on the VFD{ENDC}")
             self._rpm = rpm
 
     surface_speed = css
@@ -351,8 +353,8 @@ class Machine:
         if value > self.max_rpm:
             raise ValueError(f"Machine.rpm ({value}) must be lower than Machine.max_rpm ({self.max_rpm})")
         self._rpm = value
-        print(f"G97 ;{GREEN} Constant Spindle Speed Mode{ENDC}")
-        print(f"S{value:.4f} ;{GREEN} Using Spindle RPM: {value:.4f}{ENDC}")
+        print(f"G97 ;{GREEN} Constant Spindle Speed{ENDC}")
+        print(f"S{value:.4f} ;{GREEN} Set Spindle RPM: {value:.4f}{ENDC}")
         # print(f"S{value}")
         print(f";{YELLOW} Calculating CSS from RPM and tool diameter.{ENDC}")
         if self.tool.diameter is not None:
@@ -471,7 +473,7 @@ class Machine:
     def retract(self, comment=None):
         self.move(z=self.safe_z, comment=comment)
 
-    def full_retract(self, comment=None):
+    def full_retract(self, comment="Full retract"):
         self.move(z=0, machine_coord=True, comment=comment)
 
 ################################################################################
