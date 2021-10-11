@@ -460,7 +460,7 @@ class Machine:
             if z is not None:
                 print(f" Z{z:.4f}", end='')
                 self._z = z
-            print(f" F{self.feed if cut else self.max_feed}", end='')
+            print(f" F{self.feed if cut else self.max_feed:.4f}", end='')
             print(f" ;{GREEN} {comment}{ENDC}" if comment else '')
 
     rapid = move
@@ -474,8 +474,8 @@ class Machine:
     def icut(self, u=None, v=None, w=None, comment=None):
         self.move(u, v, w, absolute=False, cut=True, comment=comment)
 
-    def retract(self, comment=None):
-        self.move(z=self.safe_z, comment=comment)
+    def retract(self, x=None, y=None, comment="Retract"):
+        self.move(x, y, self.safe_z, comment=comment)
 
     def full_retract(self, comment="Full retract"):
         self.move(z=0, machine_coord=True, comment=comment)
@@ -599,9 +599,8 @@ class Machine:
 # Rectangular Frame
 ################################################################################
 
-    def frame(self, c_x, c_y, x, y, z_top=0, z_bottom=None, z_step=None, inside=False, retract=True, c='center', r=None, r_steps=10, feature=None):
-        if feature:
-            print(f";{ORANGE} {feature}{ENDC}")
+    def frame(self, c_x, c_y, x, y, z_top=0, z_bottom=0, z_step=None, inside=False, retract=True, c='center', r=None, r_steps=10, feature=None):
+        if feature: print(f";{ORANGE} {feature}{ENDC}")
         print(f";{CYAN} Rectangular Frame | [c_x,c_y]: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, x: {x:.4f}, y: {y:.4f}, z_top: {z_top}, z_bottom: {z_bottom}, z_step: {z_step}, inside: {inside}, c: {c}, r: {r}{ENDC}")
 
         if r is None:
@@ -639,22 +638,23 @@ class Machine:
             raise ValueError(f"{RED}Corner must be 'FL','FR','RL','RR', or 'Center'{ENDC}")
 
         tool_d = -self.tool.diameter if inside else self.tool.diameter
+        tool_r = tool_d/2
 
         turtle = self.turtle(verbose=True)
         turtle.penup()
-        turtle.goto(flx+r, fly-tool_d/2, comment="Rapid to front-left corner:")
-        turtle.pendown()
+        turtle.goto(flx+r, fly-tool_r, z_top, comment="Rapid to front-left corner:")
+        turtle.pendown(z_top)
         for i in range(passes+1):
             if i == passes:
                 z_step = 0
             turtle.forward(x-2*r, -z_step/4)
-            turtle.circle(radius=r+tool_d/2, extent=90, steps=r_steps) # TODO: Implement smooth Turtle circles and drop the steps here
+            turtle.circle(radius=r+tool_r, extent=90, steps=r_steps) # TODO: Implement smooth Turtle circles and drop the steps here
             turtle.forward(y-2*r, -z_step/4)
-            turtle.circle(radius=r+tool_d/2, extent=90, steps=r_steps)
+            turtle.circle(radius=r+tool_r, extent=90, steps=r_steps)
             turtle.forward(x-2*r, -z_step/4)
-            turtle.circle(radius=r+tool_d/2, extent=90, steps=r_steps)
+            turtle.circle(radius=r+tool_r, extent=90, steps=r_steps)
             turtle.forward(y-2*r, -z_step/4)
-            turtle.circle(radius=r+tool_d/2, extent=90, steps=r_steps)
+            turtle.circle(radius=r+tool_r, extent=90, steps=r_steps)
 
         self.retract()
         print(f";{CYAN} End Rectangular Frame{ENDC}")
@@ -665,12 +665,116 @@ class Machine:
 # Rectangular Pocket
 ################################################################################
 
-    def rectangular_pocket(self, c_x, c_y, x, y, depth, step=None, finish=0.1, undercut=False, retract=True):
+    def rectangular_pocket(self, c_x, c_y, x, y, z_top=0, z_bottom=0, step=None, z_step=None, finish=0, undercut=False, retract=True, feature=None):
+        if feature: print(f";{ORANGE} {feature}{ENDC}")
+        print(f";{CYAN} Turtle Pocket | center: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, x: {x:.4f}, y: {y:.4f}, z_top: {z_top}, z_bottom: {z_bottom}, step: {step}, z_step: {z_step}, finish: {finish}, undercut: {undercut}, retract: {retract}{ENDC}")
+        if not self.tool:
+            raise ValueError(f"{RED}You can't cut a pocket without selecting a tool first")
+        if self.tool.diameter > x or self.tool.diameter > y:
+            raise ValueError(f"{RED}Tool {self.tool.number} is too big ({self.tool.diameter:.4f} mm) to make this small ({[x,y]} mm) of a pocket{ENDC}")
+        depth = z_top - z_bottom
+        if depth <= 0:
+            raise ValueError(f"{RED}Pocket z_bottom must be lower than z_top")
+        if depth > self.tool.max_depth:
+            raise ValueError(f"{RED}Pocket is deeper ({depth} mm) than Tool {self.tool.number} can cut ({self.tool.length:.4f} mm){ENDC}")
+        if depth > self.tool.flute_length:
+            passes = math.ceil(depth/self.tool.flute_length)
+            z_pass = depth/passes
+            for i in range(passes):
+                self.rectangular_pocket(c_x, c_y, x-2*finish, y-2*finish, z_top-i*z_pass, z_top-(i+1)*z_pass, step, z_step, None, undercut, retract if i==passes-1 else False)
+            if finish:
+                self.frame(c_x, c_y, x, y, z_top, z_bottom, step, inside=True, feature="Finishing pass inside depth")
+                #TODO: Implement frame undercut
+            return
+        if finish:
+            self.rectangular_pocket(c_x, c_y, x-2*finish, y-2*finish, z_top, z_bottom, step, z_step, None, undercut, retract=False)
+            self.frame(c_x, c_y, x, y, z_top, z_bottom, step, inside=True, feature="Finishing pass inside finish")
+        else:
+            if z_step is None: z_step = self.tool.diameter
+            z_passes = math.ceil(depth/z_step)
+            z_step = depth/z_passes
+            short = min(x,y)
+            ramp_short = min(short-self.tool.diameter, 3/4*self.tool.diameter)
+            long = max(x,y)
+            ramp_long = ramp_short + long - short
+            ramp_x = ramp_long if x > y else ramp_short
+            ramp_y = ramp_long if y > x else ramp_short
+            if step is None: step = self.tool.diameter/10
+            passes = 2*math.ceil((x-ramp_x-self.tool.diameter)/step/2)
+            if passes == 0:
+                passes = 1
+            step = (x-ramp_x-self.tool.diameter)/passes
+            self.retract(comment="Retract")
+
+            turtle = self.turtle()
+            turtle._isdown = True
+            turtle.goto(c_x-ramp_x/2, c_y+ramp_y/2, z_top)
+            # Spiral Down
+            for i in range(2*z_passes+2):
+                turtle.forward(ramp_x, -z_step/4 if i < 2*z_passes else 0, comment=f"Ramp pass {i}")
+                turtle.right(90)
+                turtle.forward(ramp_y, -z_step/4 if i < 2*z_passes else 0, comment=f"Ramp pass {i}")
+                turtle.right(90)
+            # Spiral Out
+            turtle.left(90)
+            turtle.forward(step)
+            turtle.right(90)
+            for i in range(passes-2):
+                turtle.forward(ramp_x+(i+1)*step)
+                turtle.right(90)
+                turtle.forward(ramp_y+(i+2)*step)
+                turtle.right(90)
+
+            # On final pass, ramp to final dimension (x,y,z) in one corner, then finish all four sides.
+            # Add undercuts on each corner if needed
+            d = self.tool.diameter
+            h = d*math.sqrt(2)
+            s = 1/2*(h-d)
+            corner = math.sqrt((s**2)/2)
+
+            turtle.forward(x-step-d)
+            if undercut:
+                turtle.left(45)
+                turtle.forward(corner)
+                turtle.back(corner)
+                turtle.right(45)
+            turtle.right(90)
+            turtle.forward(y-d)
+            if undercut:
+                turtle.left(45)
+                turtle.forward(corner)
+                turtle.back(corner)
+                turtle.right(45)
+            turtle.right(90)
+            turtle.forward(x-d)
+            if undercut:
+                turtle.left(45)
+                turtle.forward(corner)
+                turtle.back(corner)
+                turtle.right(45)
+            turtle.right(90)
+            turtle.forward(y-d)
+            if undercut:
+                turtle.left(45)
+                turtle.forward(corner)
+                turtle.back(corner)
+                turtle.right(45)
+            turtle.right(90)
+            turtle.forward(step)
+            turtle.circle(-2*d, steps=10, extent=10)
+        if retract:
+            self.retract(c_x, c_y)
+
+################################################################################
+# Legacy Pocket
+################################################################################
+
+    def legacy_pocket(self, c_x, c_y, x, y, depth, step=None, finish=0.1, undercut=False, retract=True):
         print(f";{CYAN} Rectangular Pocket | center: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, x: {x:.4f}, y: {y:.4f}, depth: {depth}, step: {step}, finish: {finish}, undercut: {undercut}{ENDC}")
         if not self.tool:
             raise ValueError(f"{RED}You can't cut a pocket without selecting a tool first")
-        if depth > self.tool.length:
-            raise ValueError(f"{RED}Tool {self.tool.number} is shorter ({self.tool.length:.4f} mm) than pocket is deep ({depth} mm){ENDC}")
+        if depth > self.tool.flute_length:
+            raise ValueError(f"{RED}Tool {self.tool.number} flutes are shorter ({self.tool.flute_length:.4f} mm) than pocket is deep ({depth} mm){ENDC}")
         rough_depth = depth#-2*finish
         rough_x = x-2*finish
         rough_y = y-2*finish
@@ -704,7 +808,6 @@ class Machine:
         self.cut(c_x+ramp_x/2, c_y-ramp_y/2, -rough_depth)
         self.cut(c_x-ramp_x/2, c_y-ramp_y/2, -rough_depth)
         self.cut(c_x-ramp_x/2, c_y+ramp_y/2, -rough_depth)
-
         # Spiral out to dimension-finish
         for i in range(0,int(spiral_passes/2)):
             self.cut(c_x-ramp_x/2-i*spiral_step, c_y+ramp_y/2+i*spiral_step, comment=f"Spiral pass {i+1}")

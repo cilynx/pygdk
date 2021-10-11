@@ -65,7 +65,7 @@ class Tool:
         if self._shank is not None:
             return self._shank
         else:
-            return ValueError(f"{RED}Tool.shank must be set (directly or indirectly) before it is referenced{ENDC}")
+            raise ValueError(f"{RED}Tool.shank must be set (directly or indirectly) before it is referenced{ENDC}")
 
     @shank.setter
     def shank(self, value):

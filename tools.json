@@ -233,9 +233,12 @@
   "61": {
     "units": "imperial",
     "shape": "cylindrical",
-    "length": 1,
+    "length": 1.25,
     "diameter": 0.125,
-    "description": "1/8\" Downcut, 2 Flutes, 1/4\" Shank, Carbide"
+    "description": "1/8\" Downcut, 2 Flutes, 1/4\" Shank, Carbide",
+    "shank": 0.25,
+    "flutes": 2,
+    "flute_length": 1
   },
   "62": {
     "units": "imperial",

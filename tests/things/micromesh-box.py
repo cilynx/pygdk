@@ -15,25 +15,25 @@ width = pad_width + 2*sidewall
 length = pad_count*pad_thickness + (pad_count-1)*divider + 2*sidewall
 height = pad_width/2
 
-hollow_x = length-2*sidewall-10
-hollow_y = width-2*sidewall-10
+hollow_x = width-2*sidewall-10
+hollow_y = length-2*sidewall-10
 hollow_z = height-5
 
 onefinity._y_clear = 60
 
-onefinity.select_tool('1/2" Ball End')
-# Main Hollow
-onefinity.rectangular_pocket(c_x=length/2, c_y=width/2, x=hollow_x, y=hollow_y, depth=hollow_z)
+def box(c_x, c_y):
+    onefinity.tool = '1/2" Round Nose'
+    onefinity.rectangular_pocket(c_x, c_y, x=hollow_x, y=hollow_y, z_bottom=-hollow_z, feature="Main Hollow")
 
-onefinity.select_tool('1/8" Downcut')
-# Pad Slots
-for i in range(pad_count):
-    onefinity.rectangular_pocket(c_x=sidewall+pad_thickness/2+i*(pad_thickness+divider), c_y=width/2, x=pad_thickness, y=pad_width, depth=height-sidewall)
+    onefinity.tool = '1/8" Downcut'
+    for i in range(pad_count): # Pad Slots
+        onefinity.rectangular_pocket(c_x, c_y=sidewall+pad_thickness/2+i*(pad_thickness+divider), x=pad_width, y=pad_thickness, z_bottom=sidewall-height)
 
-onefinity.select_tool('1/4" Downcut')
-# Lip for Lid
-onefinity.frame(c_x=length/2, c_y=width/2, x=length-sidewall, y=width-sidewall, depth=5, r=onefinity.current_tool.radius, feature="Lip for lid")
-# Outer Perimeter
-onefinity.frame(c_x=length/2, c_y=width/2, x=length, y=width, depth=height, feature="Outer Perimiter")
+    onefinity.tool = '1/4" Downcut'
+    onefinity.frame(c_x, c_y, x=width-sidewall, y=length-sidewall, z_bottom=-5, r=onefinity.tool.radius, feature="Lip for lid")
 
-onefinity.full_retract()
+    onefinity.full_retract()
+
+box(width/2, length/2)
+box(width+5+width/2, length/2)
+onefinity.frame((2*width+5)/2, length/2, x=2*width+10, y=length, z_bottom=-height, feature="Outer Perimiter")

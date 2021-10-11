@@ -52,11 +52,12 @@ class Turtle:
 # is headed.
 ################################################################################
 
-    def forward(self, distance, dz):
+    def forward(self, distance, dz=0, comment=None):
         x = self._x + distance * math.cos(math.radians(self.yaw))
         y = self._y + distance * math.sin(math.radians(self.yaw))
         z = self._z + dz
-        comment = f"Moving at {self.yaw:.4f}-deg from ({self._x:.4f}, {self._y:.4f}, {self._z:.4f}) to ({x:.4f}, {y:.4f}, {z:.4f})" if self._verbose else None
+        if self._verbose and comment is None:
+            comment = f"Moving at {self.yaw:.4f}-deg from ({self._x:.4f}, {self._y:.4f}, {self._z:.4f}) to ({x:.4f}, {y:.4f}, {z:.4f})"
         self.goto(x, y, z, comment=comment)
 
     fd = forward
@@ -309,10 +310,10 @@ class Turtle:
 # Pull the pen down -- drawing / cutting when moving
 ################################################################################
 
-    def pendown(self):
+    def pendown(self, value=None):
         self._isdown = True
         self._machine.cut(z=self._z_draw, comment="Pendown" if self._verbose else None)
-        self._z = self._z_draw
+        self._z = value if value is not None else self._z_draw
 
     pd = pendown
     down = pendown
