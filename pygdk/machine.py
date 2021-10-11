@@ -58,7 +58,7 @@ class Machine:
         self._x_offset = 0
         self._y_offset = 0
         self._z_offset = 0
-        self._current_tool = None
+        self._tool = None
         self._absolute = None
         self._feed = None
         self._turtle = None
@@ -101,14 +101,7 @@ class Machine:
 # CAMotics-compatible Tool Table
 ################################################################################
 
-    def new_tool(self):
-        return Tool(self)
-
-    def load_tools(self, file):
-        with open(file) as f:
-            self._tool_table = json.load(f)
-
-    def tool(self, i):
+    def tool_from_tool_table(self, i):
         if self._tool_table:
             if str(i) in self._tool_table:
                 return Tool(self, self._tool_table[str(i)], str(i))
@@ -178,26 +171,25 @@ class Machine:
         self._z_offset = value
 
 ################################################################################
-# Machine.current_tool -- Object representing the current Tool
+# Machine.tool -- Object representing the current Tool
 ################################################################################
 
     @property
-    def current_tool(self):
-        return self._current_tool
+    def tool(self):
+        return self._tool
 
-    @current_tool.setter
-    def current_tool(self, tool):
+    @tool.setter
+    def tool(self, tool):
+        previous_tool = self.tool
         if isinstance(tool, int):
-            self._current_tool = self.tool(tool)
+            self._tool = self.tool_from_tool_table(tool)
         elif isinstance(tool, str):
-            self._current_tool = self.tool(tool)
-            tool = self._current_tool.number
+            self._tool = self.tool_from_tool_table(tool)
+            tool = self._tool.number
         elif isinstance(tool, Tool):
-            self._current_tool = tool
-            tool = self._current_tool.number
+            self._tool = tool
+            tool = self._tool.number
         else:
-            raise TypeError(f"{RED}Machine.current_tool must be set to an int (Tool Number), str (Tool Description), or Tool object{ENDC}")
-        if 'Sharpie' not in self.current_tool._description or self._simulate:
             position = [self._x, self._y, self._z]
             self.rapid(z=0, machine_coord=True, comment="Fully retracting")
             if self._y_clear is not None:
@@ -210,14 +202,13 @@ class Machine:
             self.rapid(x=position[0])
             self.rapid(y=position[1])
 #            self.rapid(z=-10, machine_coord=True)
+            raise TypeError(f"{RED}Machine.tool must be set to an int (Tool Number), str (Tool Description), or Tool object{ENDC}")
+        if 'Sharpie' not in self.tool._description or self._simulate:
             print(f"M6 T{tool} ;{GREEN} Select Tool {tool}{ENDC}")
         else:
             print(f";{YELLOW} Select Tool {tool}{ENDC}")
         if self.material:
             self.update_fas()
-
-    def select_tool(self, tool):
-        self.current_tool = tool
 
 ################################################################################
 # Machine.material -- Workpiece material.  Still thinking about a separate class
@@ -230,7 +221,7 @@ class Machine:
     @material.setter
     def material(self,value):
         self._material = value
-        if self.current_tool:
+        if self.tool:
             self.update_fas()
 
 ################################################################################
@@ -238,34 +229,34 @@ class Machine:
 ################################################################################
 
     def update_fas(self):
-        if self.material and self.current_tool:
+        if self.material and self.tool:
             fas_file = 'feeds-and-speeds.json'
             if os.path.exists(fas_file):
                 with open(fas_file, 'r') as fas:
                     self._fas = json.load(fas)
             sfm = self._fas['SFM']
             chipload = self._fas['Chipload']
-            cutter = self.current_tool.material
+            cutter = self.tool.material
             if self.material in sfm[cutter] and self.material in chipload:
                 print(f";{YELLOW} Workpiece is {self.material}{ENDC}")
 
-                if self.current_tool.rpm:
-                    rpm = (self.current_tool.rpm[self.material][0]+self.current_tool.rpm[self.material][1])/2
+                if self.tool.rpm:
+                    rpm = (self.tool.rpm[self.material][0]+self.tool.rpm[self.material][1])/2
                     print(f";{YELLOW} Using tool manufacturer recommended spindle RPM: {rpm:.4f} rpm{ENDC}")
                     self.rpm = rpm
                 else:
                     self.css = (sfm[cutter][self.material][0]+sfm[cutter][self.material][1])/2/196.85
 
-                if self.current_tool.ipm:
-                    ipm = (self.current_tool.ipm[self.material][0]+self.current_tool.ipm[self.material][1])/2
+                if self.tool.ipm:
+                    ipm = (self.tool.ipm[self.material][0]+self.tool.ipm[self.material][1])/2
                     print(f";{YELLOW} Using tool manufacturer recommended feed: {ipm:.4f} in/min{ENDC}")
                     self.feed = ipm*25.4
                 else:
                     print(f";{YELLOW} No manufacturer-recommended IPM Feed.  Calculating.{ENDC}")
-                    cl_range = chipload[self.material].get(f"{self.current_tool.diameter/25.4:.3f}", None)
+                    cl_range = chipload[self.material].get(f"{self.tool.diameter/25.4:.3f}", None)
                     if cl_range:
                         cl_mean = (cl_range[0]+cl_range[1])/2
-                        self.feed = self.rpm * self.current_tool.flutes * cl_mean * 25.4
+                        self.feed = self.rpm * self.tool.flutes * cl_mean * 25.4
                     else:
                         print(f";{RED} Tool not available in chipload table.  You're on your own for feeds and speeds.{ENDC}")
 
@@ -336,10 +327,10 @@ class Machine:
     def css(self, value):
         print(f";{YELLOW} Desired Constant Surface Speed (CSS): {value:.4f} m/s | {value*196.85:.4f} ft/min{ENDC}")
         if self.type == "Mill":
-            print(f";{YELLOW} Calculating RPM from CSS and tool diameter.")
-            rpm = value * 60000 / math.pi / self.current_tool.diameter
+            print(f";{YELLOW} Calculating RPM from CSS and tool diameter.{ENDC}")
+            rpm = value * 60000 / math.pi / self.tool.diameter
             if rpm > self.max_rpm:
-                css = self.max_rpm * math.pi * self.current_tool.diameter / 60000
+                css = self.max_rpm * math.pi * self.tool.diameter / 60000
                 print(f";{RED} {self.name} cannot do {rpm:.4f} rpm.  Maxing out at {self.max_rpm} rpm | {css:.4f} m/s | {css*196.85:.4f} ft/min{ENDC}")
                 rpm = self.max_rpm;
             print(f";{YELLOW} Setting RPM: {rpm:.4f}{ENDC}")
@@ -364,8 +355,8 @@ class Machine:
         print(f"S{value:.4f} ;{GREEN} Using Spindle RPM: {value:.4f}{ENDC}")
         # print(f"S{value}")
         print(f";{YELLOW} Calculating CSS from RPM and tool diameter.{ENDC}")
-        if self.current_tool.diameter is not None:
-            self._css = self.rpm * math.pi * self.current_tool.diameter / 60000
+        if self.tool.diameter is not None:
+            self._css = self.rpm * math.pi * self.tool.diameter / 60000
             print(f";{YELLOW} Calculated Tool Constant Surface Speed (CSS): {self.css:.4f} m/s | {self.css*196.85:.4f} ft/min{ENDC}")
         else:
             print(f";{RED} Cannot calculate CSS from RPM because tool diameter is undefined{ENDC}")
@@ -507,8 +498,8 @@ class Machine:
 
     def mill_drill(self, c_x, c_y, diameter, depth, z_step=0.1, outside=False, retract=True):
         print(f";{CYAN} Mill Drill | center: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, diameter: {diameter:.4f}, depth: {depth}, z_step: {z_step:.4f}{ENDC}")
-        if diameter > 2 * self.current_tool.diameter:
-            raise ValueError(f"{RED}Tool {self.current_tool.number} ({self.current_tool.diameter:.4f} mm) is less than half as wide as the hole ({diameter} mm).  Use a larger endmill or make a pocket instead of mill-drilling.")
+        if diameter > 2 * self.tool.diameter:
+            raise ValueError(f"{RED}Tool {self.tool.number} ({self.tool.diameter:.4f} mm) is less than half as wide as the hole ({diameter} mm).  Use a larger endmill or make a pocket instead of mill-drilling.")
         self.helix(c_x, c_y, diameter, depth, z_step, outside, retract)
         print(f";{CYAN} Mill Drill | END{ENDC}")
 
@@ -521,21 +512,21 @@ class Machine:
         if self._optimize:
             raise ValueError(f"{RED}The _optimize option currently does not work with helix operations")
         print(f";{CYAN} Helix | center: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, diameter: {diameter:.4f}, depth: {depth}, z_step: {z_step:.4f}{ENDC}")
-        if diameter < self.current_tool.diameter:
-            raise ValueError(f"{RED}Tool {self.current_tool.number} is too big ({self.current_tool.diameter:.4f} mm) to make this small ({diameter} mm) of a hole{ENDC}")
-        if depth > self.current_tool.length:
-            raise ValueError(f"{RED}Tool {self.current_tool.number} is shorter ({self.current_tool.length:.4f} mm) than the cut is deep ({depth} mm){ENDC}")
+        if diameter < self.tool.diameter:
+            raise ValueError(f"{RED}Tool {self.tool.number} is too big ({self.tool.diameter:.4f} mm) to make this small ({diameter} mm) of a hole{ENDC}")
+        if depth > self.tool.length:
+            raise ValueError(f"{RED}Tool {self.tool.number} is shorter ({self.tool.length:.4f} mm) than the cut is deep ({depth} mm){ENDC}")
         if z_step > depth:
             raise ValueError(f"{RED}z_step cannot be greater than depth{ENDC}")
         if outside:
             diameter = -diameter
         self.absolute = True
         self.rapid(z=self.safe_z, comment="Rapid to Safe Z")
-        self.rapid(c_x+diameter/2-self.current_tool.diameter/2, c_y, comment="Rapid to pocket offset")
+        self.rapid(c_x+diameter/2-self.tool.diameter/2, c_y, comment="Rapid to pocket offset")
         self.rapid(z=0.1, comment="Rapid to workpiece surface")
         print(f"G17;{GREEN} Helix in XY-plane{ENDC}")
-        print(f"G2 Z{-depth} I{self.current_tool.diameter/2-diameter/2:.4f} J0 P{int(depth/z_step)} F{self.feed};{GREEN} Heli-drill{ENDC}")
-        print(f"G2 I{self.current_tool.diameter/2-diameter/2:.4f} J0 P1 F{self.feed};{GREEN} Clean the bottom{ENDC}")
+        print(f"G2 Z{-depth} I{self.tool.diameter/2-diameter/2:.4f} J0 P{int(depth/z_step)} F{self.feed};{GREEN} Heli-drill{ENDC}")
+        print(f"G2 I{self.tool.diameter/2-diameter/2:.4f} J0 P1 F{self.feed};{GREEN} Clean the bottom{ENDC}")
         if retract:
             self.rapid(z=self.safe_z, comment="Retract")
             self.rapid(c_x, c_y, comment="Re-Center")
@@ -551,33 +542,33 @@ class Machine:
         print(f";{CYAN} Circular Pocket | center: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, diameter: {diameter:.4f}, depth: {depth}, step: {step}, finish: {finish}{ENDC}")
         if self._optimize:
             raise ValueError(f"{RED}The _optimize option currently does not work with circular operations")
-        if step is None: step = self.current_tool.diameter/10
-        if diameter > 2 * self.current_tool.diameter:
-            drill_diameter = 2*self.current_tool.diameter - 2*finish
+        if step is None: step = self.tool.diameter/10
+        if diameter > 2 * self.tool.diameter:
+            drill_diameter = 2*self.tool.diameter - 2*finish
         else:
             drill_diameter = diameter - 2*finish
         self.mill_drill(c_x, c_y, drill_diameter, depth, step, retract=False)
-        center = self.current_tool.diameter/2-drill_diameter/2
+        center = self.tool.diameter/2-drill_diameter/2
         i = 0;
         for i in range(1, int((diameter/2-drill_diameter/2)/step)+1):
             if i%2:
                 # Right to Left
-                print(f"G2 I{center-i*step+step/2:.4f} X{c_x-drill_diameter/2+self.current_tool.diameter/2-i*step:.4f} F{self.feed}{'; '+GREEN+'Spiral out'+ENDC if i==1 else ''}")
+                print(f"G2 I{center-i*step+step/2:.4f} X{c_x-drill_diameter/2+self.tool.diameter/2-i*step:.4f} F{self.feed}{'; '+GREEN+'Spiral out'+ENDC if i==1 else ''}")
             else:
                 # Left to Right
-                print(f"G2 I{i*step-step/2-center:.4f} X{c_x+drill_diameter/2-self.current_tool.diameter/2+i*step:.4f} F{self.feed}")
+                print(f"G2 I{i*step-step/2-center:.4f} X{c_x+drill_diameter/2-self.tool.diameter/2+i*step:.4f} F{self.feed}")
         if i%2:
             # Left to Right
-            x2 = c_x+diameter/2-self.current_tool.diameter/2
-            x1 = c_x+drill_diameter/2-self.current_tool.diameter/2+(i-1)*step
+            x2 = c_x+diameter/2-self.tool.diameter/2
+            x1 = c_x+drill_diameter/2-self.tool.diameter/2+(i-1)*step
             print(f"G2 I{i*step-step/2-center+(x2-x1)/2:.4f} X{x2} F{self.feed}; {GREEN}Getting to final dimension{ENDC}")
-            print(f"G2 I{self.current_tool.diameter/2-diameter/2} F{self.feed}; {GREEN}Final pass{ENDC}")
+            print(f"G2 I{self.tool.diameter/2-diameter/2} F{self.feed}; {GREEN}Final pass{ENDC}")
         else:
             # Right to Left
-            x2 = c_x-diameter/2+self.current_tool.diameter/2
-            x1 = c_x-drill_diameter/2+self.current_tool.diameter/2-(i-1)*step
+            x2 = c_x-diameter/2+self.tool.diameter/2
+            x1 = c_x-drill_diameter/2+self.tool.diameter/2-(i-1)*step
             print(f"G2 I{center-i*step+step/2+(x2-x1)/2:.4f} X{x2} F{self.feed}; {GREEN}Getting to final dimension{ENDC}")
-            print(f"G2 I{diameter/2-self.current_tool.diameter/2} F{self.feed}; {GREEN}Final pass{ENDC}")
+            print(f"G2 I{diameter/2-self.tool.diameter/2} F{self.feed}; {GREEN}Final pass{ENDC}")
         if retract:
             self.rapid(c_x, c_y, self.safe_z, comment="Retract")
         print(f";{CYAN} Circular Pocket | END{ENDC}")
@@ -602,23 +593,25 @@ class Machine:
 # Rectangular Frame
 ################################################################################
 
-    def frame(self, c_x, c_y, x, y, depth, z_step=None, outside=True, retract=True, c='center', r=None, r_steps=10, feature=None):
+    def frame(self, c_x, c_y, x, y, z_top=0, z_bottom=None, z_step=None, inside=False, retract=True, c='center', r=None, r_steps=10, feature=None):
         if feature:
             print(f";{ORANGE} {feature}{ENDC}")
-        print(f";{CYAN} Rectangular Frame | [c_x,c_y]: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, x: {x:.4f}, y: {y:.4f}, depth: {depth}, z_step: {z_step}, outside: {outside}, c: {c}, r: {r}{ENDC}")
+        print(f";{CYAN} Rectangular Frame | [c_x,c_y]: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, x: {x:.4f}, y: {y:.4f}, z_top: {z_top}, z_bottom: {z_bottom}, z_step: {z_step}, inside: {inside}, c: {c}, r: {r}{ENDC}")
 
         if r is None:
-            r = 0 if outside else self.current_tool.radius
-        if not outside and r < self.current_tool.radius:
-            raise ValueError(f"{RED}Tool radius ({self.current_tool.radius} mm) is larger than requested inside corner radius ({r} mm)")
+            r = self.tool.radius if inside else 0
+        if inside and r < self.tool.radius:
+            raise ValueError(f"{RED}Tool radius ({self.tool.radius} mm) is larger than requested inside corner radius ({r} mm)")
 
-        if not self.current_tool:
+        if not self.tool:
             raise ValueError(f"{RED}You can't cut a frame without selecting a tool first")
-        if depth > self.current_tool.length:
-            raise ValueError(f"{RED}Tool {self.current_tool.number} is shorter ({self.current_tool.length:.4f} mm) than frame is deep ({depth} mm){ENDC}")
+
+        depth = z_top - z_bottom
+        if depth > self.tool.length:
+            raise ValueError(f"{RED}Tool {self.tool.number} is shorter ({self.tool.length:.4f} mm) than frame is deep ({depth} mm){ENDC}")
 
         if not z_step:
-            z_step = self.current_tool.diameter
+            z_step = self.tool.diameter
         if z_step > depth:
             z_step = depth
         passes = math.ceil(depth/z_step)
@@ -639,7 +632,7 @@ class Machine:
         elif c is not None and c.lower() != 'fl':
             raise ValueError(f"{RED}Corner must be 'FL','FR','RL','RR', or 'Center'{ENDC}")
 
-        tool_d = self.current_tool.diameter if outside else -self.current_tool.diameter
+        tool_d = -self.tool.diameter if inside else self.tool.diameter
 
         turtle = self.turtle(verbose=True)
         turtle.penup()
@@ -668,20 +661,20 @@ class Machine:
 
     def rectangular_pocket(self, c_x, c_y, x, y, depth, step=None, finish=0.1, undercut=False, retract=True):
         print(f";{CYAN} Rectangular Pocket | center: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, x: {x:.4f}, y: {y:.4f}, depth: {depth}, step: {step}, finish: {finish}, undercut: {undercut}{ENDC}")
-        if not self.current_tool:
+        if not self.tool:
             raise ValueError(f"{RED}You can't cut a pocket without selecting a tool first")
-        if depth > self.current_tool.length:
-            raise ValueError(f"{RED}Tool {self.current_tool.number} is shorter ({self.current_tool.length:.4f} mm) than pocket is deep ({depth} mm){ENDC}")
+        if depth > self.tool.length:
+            raise ValueError(f"{RED}Tool {self.tool.number} is shorter ({self.tool.length:.4f} mm) than pocket is deep ({depth} mm){ENDC}")
         rough_depth = depth#-2*finish
         rough_x = x-2*finish
         rough_y = y-2*finish
         short = min(rough_x,rough_y)
-        if short < self.current_tool.diameter:
-            raise ValueError(f"{RED}Tool {self.current_tool.number} is too big ({self.current_tool.diameter:.4f} mm) to make this small ({short} mm) of a pocket{ENDC}")
-        if step is None: step = self.current_tool.diameter/10
+        if short < self.tool.diameter:
+            raise ValueError(f"{RED}Tool {self.tool.number} is too big ({self.tool.diameter:.4f} mm) to make this small ({short} mm) of a pocket{ENDC}")
+        if step is None: step = self.tool.diameter/10
 
         # Ramp down to rough depth in the center, equidistant to each edge
-        ramp_short = min(short-self.current_tool.diameter, 3/4*self.current_tool.diameter)
+        ramp_short = min(short-self.tool.diameter, 3/4*self.tool.diameter)
         long = max(rough_x,rough_y)
         ramp_long = ramp_short + long - short
         ramp_x = ramp_long if x > y else ramp_short
@@ -689,10 +682,10 @@ class Machine:
         ramp_passes = 4*math.ceil(rough_depth/step/4)
         ramp_step = rough_depth / ramp_passes
         assert ramp_step <= step
-        spiral_passes = 2*math.ceil((rough_x-ramp_x-self.current_tool.diameter)/step/2)
+        spiral_passes = 2*math.ceil((rough_x-ramp_x-self.tool.diameter)/step/2)
         if spiral_passes == 0:
             spiral_passes = 1
-        spiral_step = (rough_x-ramp_x-self.current_tool.diameter)/spiral_passes
+        spiral_step = (rough_x-ramp_x-self.tool.diameter)/spiral_passes
         assert spiral_step <= step
         self.retract(comment="Retract")
         for i in range(0,int(ramp_passes/4)):
@@ -715,7 +708,7 @@ class Machine:
 
         # On final pass, ramp to final dimension (x,y,z) in one corner, then finish all four sides.
         # Add undercuts on each corner if needed
-        d = self.current_tool.diameter
+        d = self.tool.diameter
         h = d*math.sqrt(2)
         s = 1/2*(h-d)
         corner = math.sqrt((s**2)/2)
@@ -748,7 +741,7 @@ class Machine:
 
     @property
     def pen_color(self):
-        return self.current_tool._description
+        return self.tool._description
 
     @pen_color.setter
     def pen_color(self, value):
@@ -773,7 +766,7 @@ class Machine:
 
         else:
             self.rapid(z=self._plotter['Z-Stage'], comment="Go to pen change staging height")
-            if self.current_tool:
+            if self.tool:
                 self.rapid(x=self._plotter['Slot Zero'][0], y=self._plotter['Slot Zero'][1], z=self._plotter['Z-Stage'], comment="Stage to retract current pen")
                 self.rapid(z=self._plotter['Z-Click'], comment="Retract current pen")
                 self.rapid(z=self._plotter['Z-Stage'], comment="Return to pen change stage")
@@ -783,7 +776,7 @@ class Machine:
                 rows = len(self._plotter['Magazine'])
                 backset = self._plotter['Slot Zero'][1] + (rows+1)*self._plotter['Pen Spacing'];
                 self.rapid(x=self._plotter['Slot Zero'][0], y=backset, comment="Rapid to homing-safe backset")
-                return self.current_tool
+                return self.tool
             for row in self._plotter['Magazine']:
                 if value in row:
                     i = row.index(value)
@@ -793,8 +786,8 @@ class Machine:
                     self.rapid(x=self._plotter['Slot Zero'][0], y=self._plotter['Slot Zero'][1], z=self._plotter['Z-Stage'], comment="Stage to activate new pen")
                     self.rapid(z=self._plotter['Z-Click'], comment="Activate new pen")
                     self.rapid(z=self._plotter['Z-Stage'], comment="Return to pen change stage")
-                    self.current_tool = value
-                    return self.current_tool
+                    self.tool = value
+                    return self.tool
             raise ValueError(f"{RED}'{value}' is not a configured color.  Options are: {self._plotter['Magazine']}" )
 
 ################################################################################
