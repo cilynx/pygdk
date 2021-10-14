@@ -19,7 +19,7 @@ If anyone is interested in providing feedback on other platforms, I'd love to he
 
 Copy one of the scripts from any of the directories under `test/` to the root of this repo and run it.  It's not going to talk to your machine; it's just going to spit out gcode, so you're safe.  For this example, we're playing with [bangle.py](tests/things/bangle.py).
 
-![quickstart](screenshots/quickstart.png)
+![quickstart](https://user-images.githubusercontent.com/6083980/137239013-e89898a2-ae35-41a1-bf87-28c250affb0d.png)
 
 ## Simulate
 
@@ -27,8 +27,8 @@ This step is technically optional, but it's good practice to simulate your gcode
 
 Personally, I'm a fan of [CAMotics](https://camotics.org/) as it integrates with and is made by the same folks as the [buildbotics](https://buildbotics.com/) controller my Onefinity uses.
 
-![simulate-terminal](screenshots/simulate-terminal.png)
-![simulate-camotics](screenshots/simulate-camotics.png)
+![simulate-terminal](https://user-images.githubusercontent.com/6083980/137239020-0cd2d64f-2b1b-4e1f-8036-32e0f41b7f32.png)
+![simulate-camotics](https://user-images.githubusercontent.com/6083980/137239030-15445d6b-7a24-4ac7-95e6-963395a0263d.png)
 
 The first time you run CAMotics, you'll need to setup your tool table by right-clicking in the blank Tool Table section and selecting `Load Tool Table`.  If you don't already have a tool table you want to use, you can load in [tools.json](tools.json) -- pygdk's default tool table has more information in it than CAMotics can leverage, but it is backwards compatible.
 
