@@ -90,7 +90,7 @@ machine.rpm = 15000
 
 Spindle RPM is the speed at which your tool rotates.  If you define your tool parameters and workpiece [material](#material), `pygdk` will calculate and set `rpm` for you automatically.  Expressly setting `rpm` will override a previously calculated value.  If you find you're having to override automatically calculated values or manually set due to missing tool/material combinations, please [cut an issue](https://github.com/cilynx/pygdk/issues) or send a PR with updated parameters to improve and extend [feeds-and-speeds.json](feeds-and-speeds.json).
 
-When you set `rpm` and have your tool parameters defined, [css](#css) will be automatically calculated and set for you.
+When you set `rpm` and have your tool parameters defined, [css](#constant-surface-speed) will be automatically calculated and set for you.
 
 #### Motion Primitives
 
@@ -259,3 +259,61 @@ machine.rectangular_pocket(c_x, c_y, x, y, z_top=0, z_bottom=0, z_step=None unde
 `undercut` is whether or not to put "mouse ears" in the corners to provide clearance for sharp corners to mate into the pocket
 
 ![rectangular-pocket](https://user-images.githubusercontent.com/6083980/137253197-dc26e02b-4a58-453d-ae6d-ee3afbafa049.png)
+
+### Plotter
+
+#### Configuration
+```
+{
+   "Name": "Onefinity",
+   "Type": "Mill",
+   "Max Feed Rate (mm/min)": 10000,
+   "Max Spindle RPM": 24000,
+   "Tool Table": "tools.json",
+   "Plotter": {
+      "Magazine": [
+         ["","Light Blue","Lime",""],
+         ["Black","Red","Blue","Orange"]
+      ],
+      "Slot Zero": [806,33],
+      "Pen Spacing": 13.7,
+      "Z-Touch": -123,
+      "Z-Click": -88,
+      "Z-Stage": -110
+   }
+}
+```
+To use the plotter functionality, you need to define both your loaded colors and the functional offsets in your [machine configuration](#initialization).  
+
+For color names, you can use anything you like and just make sure you remember them as you'll use these exact color names to select the pens later on.  The array in the config above corresponds to the the pens in the picture below.
+
+![plotter-colors](https://user-images.githubusercontent.com/6083980/137350104-7a9e719a-7231-43ce-baa5-9a2ddc25e138.png)
+
+
+Until I figure out an automated routine to handle offset calibration, you'll need to jog your machine around manually and record the appropriate coordinates in your config.
+
+Make sure you have homed your machine and zeroed out any local offsets before starting this process.
+
+With the [magazine](https://github.com/cilynx/onefinity/blob/main/Pen%20Plotter/Pen%20Magazine.stl) installed on the carriage and the [changer](https://github.com/cilynx/onefinity/blob/main/Pen%20Plotter/Pen%20Changer%20XY.stl) installed on the front of the right-side Y-rail, jog the magazine over such that the back-left pen slot is centered under the changer post.  Record your current [x,y] as your `Slot Zero`.  I round this to the nearest mm as the clicky-tops of the pens have more lateral slop in them than that anyway.
+
+There's no pen is slot zero in the picture below due to some bad design choices on my part, but hopefully you get the idea.
+
+![slot-zero](https://user-images.githubusercontent.com/6083980/137350693-0ce2f969-93ee-4df1-8736-824241d8ff4f.png)
+
+
+`Pen Spacing` is a function of the magazine design and for the current incarnation is `13.7`.  Future magazines designed for different pens may have different spacing.  For the curious, this is the center-to-center offset between slots in both X and Y and allows `pygdk` to address any slot by adding multiples of this offset to the known position of `Slot Zero`.
+
+Load a pen into any slot of the magazine and manually actuate it so the tip is sticking out ready to draw.  Slowly jog down in Z until you see the pen just barely move up in the magazine. (Check out [this video](https://youtu.be/0U2Qaqqsit8?t=69) at 0.25x speed and you'll see the motion in the black pen that I'm talking about.)  You can also jog around in X,Y to see when you start drawing a line.  Find the highest Z-coordinate where you draw a consistent line and set that as your `Z-Touch`.  I round this one down (away from zero) to the next mm as it's better to have a little more unnecessary motion in the magazine than to have the pen skip due to imperfections in the drawing surface.
+
+![z-touch](https://user-images.githubusercontent.com/6083980/137351827-47ca3f86-2d30-443d-ac59-14a5959ec4d0.png)
+
+Leave the pen actuated and jog up and over so that your loaded pen is under the pen changer post.  Very slowly, jog up to find the lowest Z-coordinate that actuates the clicky-top.  This is your `Z-Click`.  I round this one up to the nearest mm to account for differences between pens.  With the [Sharpies I'm using](https://amzn.to/3DAZm32), there's about 2mm between the actuation point and bottoming out the clicker, so an extra fraction of a mm isn't going to hurt anything.
+
+![z-click](https://user-images.githubusercontent.com/6083980/137352444-a5b58ef5-76ad-42a8-a364-ea7a9ea320d0.png)
+
+
+Jog the magazine down now such that you unactuated pen tops are just a bit lower than the bottom of the changer post.  This doesn't have to be super precise.  You're looking for a happy position that is safely well higher than your drawing surface but also lower than the changer post so you don't crash into it.  Once you find your happy place that doesn't draw and doesn't crash into the changer, set that as your `Z-Stage`.
+
+![z-stage](https://user-images.githubusercontent.com/6083980/137353331-cf4c5993-07f8-45a8-9263-062f6b812a33.png)
+
+*As an Amazon Affiliate, I earn a small commission from qualifying purchases made from my referral links, which helps to fund more open-source projects like this one.*
