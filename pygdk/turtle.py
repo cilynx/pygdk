@@ -129,10 +129,8 @@ class Turtle:
         self._heading = self.dot([self._heading], self.rot(self._normal, angle))[0]
         self._right = self.dot([self._right], self.rot(self._normal, angle))[0]
 
-    def right(self, angle):
-        self.yaw(angle)
-
-    rt = right
+    right = yaw
+    rt = yaw
 
     def left(self, angle):
         self.yaw(-angle)
@@ -178,7 +176,7 @@ class Turtle:
 ################################################################################
 
     def setx(self, x):
-        goto(x, self._y)
+        self.goto(x, self._y)
 
 ################################################################################
 # Turtle.sety(y) -- Teleport the Turtle to a new Y-position
@@ -188,7 +186,7 @@ class Turtle:
 ################################################################################
 
     def sety(self, y):
-        goto(self._x, y)
+        self.goto(self._x, y)
 
 ################################################################################
 # Turtle.setheading(to_angle)
@@ -221,7 +219,7 @@ class Turtle:
         self.penup()
         self.goto(0,0)
         if wasdown:
-            self.pendown
+            self.pendown()
         self._heading = [1,0,0]
 #        self.yaw = 0 if self._mode == "logo" else -90
 
@@ -244,11 +242,14 @@ class Turtle:
 ################################################################################
 
     def circle(self, radius, extent=360, steps=10, e=None, comment=None):
-        side = abs(2*radius*math.sin(math.pi/steps))
+        side = abs(2*radius*math.sin(math.pi*extent/360/steps))
         angle = extent/steps if radius > 0 else -extent/steps
-        for i in range(steps):
+        self.left(angle/2)
+        self.forward(side)
+        for i in range(steps-1):
             self.left(angle)
             self.forward(side, e=e, comment=comment)
+        self.left(angle/2)
 
 ################################################################################
 # Turtle.speed(speed=None)
@@ -271,7 +272,7 @@ class Turtle:
 ################################################################################
 
     def position(self):
-        return [self._x, self._y]
+        return [self._x, self._y, self._z]
 
     pos = position
 
@@ -334,10 +335,10 @@ class Turtle:
 # Pull the pen down -- drawing / cutting when moving
 ################################################################################
 
-    def pendown(self, value=None):
+    def pendown(self, z=None):
         self._isdown = True
         self._machine.cut(z=self._z_draw, comment="Pendown" if self._verbose else None)
-        self._z = value if value is not None else self._z_draw
+        self._z = z if z is not None else self._z_draw
 
     pd = pendown
     down = pendown
