@@ -17,6 +17,7 @@ class Machine:
 
     MILL = 'Mill'
     LATHE = 'Lathe'
+    FDM_PRINTER = 'FDM Printer'
 
 ################################################################################
 # Initializer -- Load details from JSON or populate from passed parameters
@@ -46,8 +47,8 @@ class Machine:
                     self._plotter = dict['Plotter']
                 else:
                     self._plotter = None
-        if not type in [self.MILL, self.LATHE]:
-            raise ValueError(f"Machine type ({type}) must be Machine.MILL or Machine.LATHE")
+        if not type in [self.MILL, self.LATHE, self.FDM_PRINTER]:
+            raise ValueError(f"Machine type ({type}) must be Machine.MILL, Machine.LATHE, or Machine.FDM_PRINTER")
         self._type = type
         self._max_feed = max_feed
         self._safe_z = safe_z
@@ -412,7 +413,7 @@ class Machine:
 # Linear Moves -- Rapid, iRapid, Cut, and iCut
 ################################################################################
 
-    def move(self, x=None, y=None, z=None, absolute=True, machine_coord=False, cut=False, comment=None):
+    def move(self, x=None, y=None, z=None, e=None, absolute=True, machine_coord=False, cut=False, comment=None):
 #        print(f";{GREEN} Cut:{cut}, X:{x}, Y:{y}, Z:{z}, ABS:{absolute}{ENDC}")
         if x is not None:
             x = x+self.x_offset
@@ -460,6 +461,8 @@ class Machine:
             if z is not None:
                 print(f" Z{z:.4f}", end='')
                 self._z = z
+            if e is not None:
+                print(f" E{e:.4f}", end='')
             print(f" F{self.feed if cut else self.max_feed:.4f}", end='')
             print(f" ;{GREEN} {comment}{ENDC}" if comment else '')
 

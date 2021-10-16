@@ -1,0 +1,18 @@
+{
+  "0": {
+    "description": "Amazon Basics Black PLA",
+    "diameter": 1.75,
+    "nozzle_temp": [190,220],
+    "bed_temp": [40,55],
+    "spool_weight": 1000,
+    "density": 1.24
+  },
+  "1": {
+    "description": "Tecbears Black PLA",
+    "diameter": 1.75,
+    "nozzle_temp": [190,210],
+    "bed_temp": [60,80],
+    "spool_weight": 1000,
+    "density": 1.24
+  }
+}

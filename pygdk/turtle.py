@@ -84,15 +84,19 @@ class Turtle:
         # http://scipp.ucsc.edu/~haber/ph216/rotation_12.pdf
 
     def dot(self, m1, m2):
+        # https://stackoverflow.com/questions/10508021/matrix-multiplication-in-pure-python
         dp = [[sum(x*y for x,y in zip(m1_r, m2_c)) for m2_c in zip(*m2)] for m1_r in m1]
+
+        # I hate this, but w/o it, cumulative error gets crazy after a few hundred rotations
+        # It basically "snaps" to an axis if you're within 0.000000000001 of it
         if round(dp[0][0],12) == 0: dp[0][0] = 0
         if round(dp[0][0],12) == 1: dp[0][0] = 1
         if round(dp[0][1],12) == 0: dp[0][1] = 0
         if round(dp[0][1],12) == 1: dp[0][1] = 1
         if round(dp[0][2],12) == 0: dp[0][2] = 0
         if round(dp[0][2],12) == 1: dp[0][2] = 1
+
         return dp
-        # https://stackoverflow.com/questions/10508021/matrix-multiplication-in-pure-python
 
     def mag(self, vector):
         return sum(i*i for i in vector)
@@ -147,7 +151,7 @@ class Turtle:
 # change the turtle’s orientation.
 ################################################################################
 
-    def goto(self, x, y=None, z=None, comment=None):
+    def goto(self, x=None, y=None, z=None, e=None, comment=None):
         if isinstance(x, list):
             if y is None and z is None:
                 z = x[2]
@@ -161,7 +165,7 @@ class Turtle:
             self._y = y
         if z is not None:
             self._z = z
-        self._machine.move(self._x, self._y, self._z, cut=self._isdown, comment=comment)
+        self._machine.move(self._x, self._y, self._z, e, cut=self._isdown, comment=comment)
 
     setpos = goto
     setposition = goto
