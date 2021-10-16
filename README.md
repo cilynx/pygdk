@@ -1,5 +1,5 @@
 # pygdk
-Python G-code Development Kit.  A library to directly generate gcode for CNC machines based directly on object features without abstract design, slicing, processing, etc.
+Python G-code Development Kit.  A library to directly generate gcode for CNC machines based on object features without abstract design, slicing, processing, etc.
 
 ## Disclaimer
 

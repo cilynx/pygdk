@@ -19,6 +19,9 @@ class Turtle:
         self._mode = mode
         self._cut = False
         self._yaw = 0
+        self._heading = [1,0,0]
+        self._normal = [0,0,1]
+        self._right = [0,-1,0]
         self._x = x
         self._y = y
         self._z = z
@@ -30,21 +33,6 @@ class Turtle:
         print(f";{CYAN} End Turtle{ENDC}")
 
 ################################################################################
-# Turtle.yaw
-#
-# Get and set yaw
-################################################################################
-
-    @property
-    def yaw(self):
-        return self._yaw
-
-    @yaw.setter
-    def yaw(self, value):
-        self._yaw = value%360
-        return self._yaw
-
-################################################################################
 # Turtle.forward(distance)
 # Turtle.fd(distance)
 #
@@ -52,13 +40,19 @@ class Turtle:
 # is headed.
 ################################################################################
 
-    def forward(self, distance, dz=0, comment=None):
-        x = self._x + distance * math.cos(math.radians(self.yaw))
-        y = self._y + distance * math.sin(math.radians(self.yaw))
-        z = self._z + dz
+    def forward(self, distance, dz=0, e=None, comment=None):
+        x = self._x + distance * self.heading()[0]
+        y = self._y + distance * self.heading()[1]
+        if dz: # 2.5D motion
+            if self.heading()[2] == 0:
+                z = self._z + dz
+            else:
+                raise ValueError(f"{RED}You can only use 2.5D motion in the XY-plane")
+        else: # 3D motion
+            z = self._z + distance * self.heading()[2]
         if self._verbose and comment is None:
-            comment = f"Moving at {self.yaw:.4f}-deg from ({self._x:.4f}, {self._y:.4f}, {self._z:.4f}) to ({x:.4f}, {y:.4f}, {z:.4f})"
-        self.goto(x, y, z, comment=comment)
+            comment = f"Moving at {self.heading()}-deg from ({self._x:.4f}, {self._y:.4f}, {self._z:.4f}) to ({x:.4f}, {y:.4f}, {z:.4f})"
+        self.goto(x, y, z, e, comment=comment)
 
     fd = forward
 
@@ -78,34 +72,66 @@ class Turtle:
     bk = back
 
 ################################################################################
-# Turtle.right(angle)
-# Turtle.rt(angle)
-#
-# Turn turtle right by angle units. (Units are by default degrees, but can be
-# set via the degrees() and radians() functions.) Angle orientation depends on
-# the turtle mode, see mode().
+# Rotation Matrix -- Heavy Math Helpers for Roll, Pitch, and Yaw
 ################################################################################
 
+    def rot(self, n, angle):
+        cos = math.cos(angle)
+        sin = math.sin(angle)
+        return [ [cos+(n[0]**2)*(1-cos),         n[0]*n[1]*(1-cos)-n[2]*sin,     n[0]*n[2]*(1-cos)+n[1]*sin],
+                 [n[0]*n[1]*(1-cos)+n[2]*sin,    cos+(n[1]**2)*(1-cos),          n[1]*n[2]*(1-cos)-n[0]*sin],
+                 [n[0]*n[2]*(1-cos)-n[1]*sin,    n[1]*n[2]*(1-cos)+n[0]*sin,     cos+(n[2]**2)*(1- cos)] ]
+        # http://scipp.ucsc.edu/~haber/ph216/rotation_12.pdf
+
+    def dot(self, m1, m2):
+        dp = [[sum(x*y for x,y in zip(m1_r, m2_c)) for m2_c in zip(*m2)] for m1_r in m1]
+        if round(dp[0][0],12) == 0: dp[0][0] = 0
+        if round(dp[0][0],12) == 1: dp[0][0] = 1
+        if round(dp[0][1],12) == 0: dp[0][1] = 0
+        if round(dp[0][1],12) == 1: dp[0][1] = 1
+        if round(dp[0][2],12) == 0: dp[0][2] = 0
+        if round(dp[0][2],12) == 1: dp[0][2] = 1
+        return dp
+        # https://stackoverflow.com/questions/10508021/matrix-multiplication-in-pure-python
+
+    def mag(self, vector):
+        return sum(i*i for i in vector)
+
+################################################################################
+# Turtle.roll - Roll side to side without changing the heading vector
+################################################################################
+
+    def roll(self, angle):
+        angle = math.radians(angle)
+        self._right = np.dot([self._right], self.rot(self._heading, angle))[0]
+        self._normal = np.dot([self._normal], self.rot(self._heading, angle))[0]
+
+################################################################################
+# Turtle.pitch - Tilt up or down without changing the side vector
+################################################################################
+
+    def pitch(self, angle):
+        angle = -math.radians(angle)
+        self._heading = self.dot([self._heading], self.rot(self._right, angle))[0]
+        self._normal = self.dot([self._normal], self.rot(self._right, angle))[0]
+
+################################################################################
+# Turtle.yaw - Rotate right or left as viewed from above without changing the
+# normal vector
+################################################################################
+
+    def yaw(self, angle):
+        angle = math.radians(angle)
+        self._heading = self.dot([self._heading], self.rot(self._normal, angle))[0]
+        self._right = self.dot([self._right], self.rot(self._normal, angle))[0]
+
     def right(self, angle):
-        if self._verbose:
-            print(f";{YELLOW} Updating yaw from {self.yaw} to {(self.yaw-angle)%360}.{ENDC}")
-        self.yaw -= angle
+        self.yaw(angle)
 
     rt = right
 
-################################################################################
-# Turtle.left(angle)
-# Turtle.lt(angle)
-#
-# Turn turtle left by angle units. (Units are by default degrees, but can be set
-# via the degrees() and radians() functions.) Angle orientation depends on the
-# turtle mode, see mode().
-################################################################################
-
     def left(self, angle):
-        if self._verbose:
-            print(f";{YELLOW} Updating yaw from {self.yaw} to {(self.yaw+angle)%360}.{ENDC}")
-        self.yaw += angle
+        self.yaw(-angle)
 
     lt = left
 
@@ -174,10 +200,10 @@ class Turtle:
 # 270 - South       270 - West
 ################################################################################
 
-    def setheading(self, yaw):
-        self.yaw = 450-yaw if self._mode == "logo" else angle
-
-    seth = setheading
+    # def setheading(self, yaw):
+    #     self.yaw = 450-yaw if self._mode == "logo" else angle
+    #
+    # seth = setheading
 
 ################################################################################
 # Turtle.home()
@@ -192,7 +218,8 @@ class Turtle:
         self.goto(0,0)
         if wasdown:
             self.pendown
-        self.yaw = 0 if self._mode == "logo" else -90
+        self._heading = [1,0,0]
+#        self.yaw = 0 if self._mode == "logo" else -90
 
     reset = home
 
@@ -212,19 +239,12 @@ class Turtle:
 # automatically. May be used to draw regular polygons.
 ################################################################################
 
-    def circle(self, radius, extent=360, steps=None):
-        c_x = self._x - radius * math.sin(math.radians(self.yaw))
-        c_y = self._y + radius * math.cos(math.radians(self.yaw))
-        if steps:
-            if radius < 0:
-                extent = -extent
-            segment = extent/steps
-            for i in range(1,steps+1):
-                x = c_x + radius * math.sin(math.radians(i*segment+self.yaw))
-                y = c_y - radius * math.cos(math.radians(i*segment+self.yaw))
-                comment = f"Circle segment {i} of {steps}" if self._verbose else None
-                self.goto(x,y,comment=comment)
-        self.yaw += extent
+    def circle(self, radius, extent=360, steps=10, e=None, comment=None):
+        side = abs(2*radius*math.sin(math.pi/steps))
+        angle = extent/steps if radius > 0 else -extent/steps
+        for i in range(steps):
+            self.left(angle)
+            self.forward(side, e=e, comment=comment)
 
 ################################################################################
 # Turtle.speed(speed=None)
@@ -300,7 +320,7 @@ class Turtle:
 ################################################################################
 
     def heading(self):
-        return (450-self.yaw)%360 if self._mode == 'logo' else self.yaw
+        return self._heading
 
 ################################################################################
 # Turtle.pendown()
