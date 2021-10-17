@@ -19,7 +19,19 @@ If anyone is interested in providing feedback on other platforms, I'd love to he
 
 ## Quickstart
 
-Copy one of the scripts from any of the directories under `test/` to the root of this repo and run it.  It's not going to talk to your machine; it's just going to spit out gcode, so you're safe.  For this example, we're playing with [bangle.py](tests/things/bangle.py).
+While getting your feet wet, start with a simple design like the following bangle:
+```
+from pygdk import Mill
+
+onefinity = Mill('onefinity.json')
+
+onefinity.material = 'Soft Wood'
+onefinity.tool = '1/4" Downcut'
+
+onefinity.helix(c_x=0, c_y=0, diameter=67, depth=21, z_step=10)
+onefinity.helix(c_x=0, c_y=0, diameter=77, depth=21, z_step=10, outside=True)
+```
+This design assumes your stock is 21mm thick and that you'll be zeroing Z on the surface.  
 
 ![quickstart](https://user-images.githubusercontent.com/6083980/137239013-e89898a2-ae35-41a1-bf87-28c250affb0d.png)
 
@@ -27,12 +39,12 @@ Copy one of the scripts from any of the directories under `test/` to the root of
 
 This step is technically optional, but it's good practice to simulate your gcode before you run it on your machine.  Even if you do everything right, `pygdk` is very early in development and is likely to have bugs that you can catch in simulation before anything bad happens in the real world.
 
-Personally, I'm a fan of [CAMotics](https://camotics.org/) as it integrates with and is made by the same folks as the [buildbotics](https://buildbotics.com/) controller my Onefinity uses.
+Personally, I'm a fan of [CAMotics](https://camotics.org/) as it integrates with and is made by the same folks as the open-source [buildbotics](https://buildbotics.com/) controller Onefinity uses.
 
 ![simulate-terminal](https://user-images.githubusercontent.com/6083980/137239020-0cd2d64f-2b1b-4e1f-8036-32e0f41b7f32.png)
 ![simulate-camotics](https://user-images.githubusercontent.com/6083980/137239030-15445d6b-7a24-4ac7-95e6-963395a0263d.png)
 
-The first time you run CAMotics, you'll need to setup your tool table by right-clicking in the blank Tool Table section and selecting `Load Tool Table`.  If you don't already have a tool table you want to use, you can load in [tools.json](tools.json) -- `pygdk`'s default tool table has more information in it than CAMotics can leverage, but it is backwards compatible.
+The first time you run CAMotics, you'll need to setup your tool table by right-clicking in the blank Tool Table section and selecting `Load Tool Table`.  If you don't already have a tool table you want to use, you can load in [tools.json](tables/tools.json) -- `pygdk`'s default tool table has more information in it than CAMotics can leverage, but it is backwards compatible.
 
 ## Execute
 
@@ -52,7 +64,7 @@ from pygdk import Machine
 machine = Machine('onefinity.json')
 ```
 
-To get started, import the `Machine` class and create your primary `Machine` object that you'll use to do pretty much everything else.  Check out [onefinity.json](onefinity.json) for a fleshed out configuration and [rf30.json](rf30.json) for a minimal example.
+To get started, import the `Machine` class and create your primary `Machine` object that you'll use to do pretty much everything else.  Check out [onefinity.json](machines/onefinity.json) for a fleshed out configuration and [rf30.json](machines/rf30.json) for a minimal example.
 
 #### Configuration
 
@@ -62,7 +74,7 @@ To get started, import the `Machine` class and create your primary `Machine` obj
 machine.material = 'Soft Wood'
 ```
 
-Defining your workpiece material is not required, but if you do,  `pygdk` will attempt to automatically determine appropriate feeds and speeds.  If you don't define it, you're on your own and will have to set your [feed](#feed) and [rpm](#rpm) manually before `pygdk` will generate your gcode.  Check out [feeds-and-speeds.json](feeds-and-speeds.json) for supported tool and workpiece materials.
+Defining your workpiece material is not required, but if you do,  `pygdk` will attempt to automatically determine appropriate feeds and speeds.  If you don't define it, you're on your own and will have to set your [feed](#feed) and [rpm](#rpm) manually before `pygdk` will generate your gcode.  Check out [feeds-and-speeds.json](tables/feeds-and-speeds.json) for supported tool and workpiece materials.
 
 ##### Feed
 
@@ -78,7 +90,7 @@ This is the feed for your cutting moves.  It is separate from `max_feed` which i
 machine.css = 1000
 ```
 
-Constant Surface Speed is the speed of the cutter against the workpiece, regardless of the operation.  On a lathe, it's the speed the workpiece is passing by the stationary tool.  On a mill, it's the speed each flute of the endmill is sweeping through the workpiece.  CSS will be automatically set if you define your tool parameters and workpiece [material](#material).  If you find you have to set this manually, either because your tool/material combination is not currently in `pygdk`'s lookup table or because the values we have don't work well, please [cut an issue](https://github.com/cilynx/pygdk/issues) or send a PR with updated parameters to improve and extend [feeds-and-speeds.json](feeds-and-speeds.json).
+Constant Surface Speed is the speed of the cutter against the workpiece, regardless of the operation.  On a lathe, it's the speed the workpiece is passing by the stationary tool.  On a mill, it's the speed each flute of the endmill is sweeping through the workpiece.  CSS will be automatically set if you define your tool parameters and workpiece [material](#material).  If you find you have to set this manually, either because your tool/material combination is not currently in `pygdk`'s lookup table or because the values we have don't work well, please [cut an issue](https://github.com/cilynx/pygdk/issues) or send a PR with updated parameters to improve and extend [tables/feeds-and-speeds.json](feeds-and-speeds.json).
 
 When you set `css`, spindle [rpm](#rpm) will automatically be calculated and set for you.
 
@@ -88,7 +100,7 @@ When you set `css`, spindle [rpm](#rpm) will automatically be calculated and set
 machine.rpm = 15000
 ```
 
-Spindle RPM is the speed at which your tool rotates.  If you define your tool parameters and workpiece [material](#material), `pygdk` will calculate and set `rpm` for you automatically.  Expressly setting `rpm` will override a previously calculated value.  If you find you're having to override automatically calculated values or manually set due to missing tool/material combinations, please [cut an issue](https://github.com/cilynx/pygdk/issues) or send a PR with updated parameters to improve and extend [feeds-and-speeds.json](feeds-and-speeds.json).
+Spindle RPM is the speed at which your tool rotates.  If you define your tool parameters and workpiece [material](#material), `pygdk` will calculate and set `rpm` for you automatically.  Expressly setting `rpm` will override a previously calculated value.  If you find you're having to override automatically calculated values or manually set due to missing tool/material combinations, please [cut an issue](https://github.com/cilynx/pygdk/issues) or send a PR with updated parameters to improve and extend [feeds-and-speeds.json](tables/feeds-and-speeds.json).
 
 When you set `rpm` and have your tool parameters defined, [css](#constant-surface-speed) will be automatically calculated and set for you.
 
@@ -315,5 +327,7 @@ Leave the pen actuated and jog up and over so that your loaded pen is under the 
 Jog the magazine down now such that you unactuated pen tops are just a bit lower than the bottom of the changer post.  This doesn't have to be super precise.  You're looking for a happy position that is safely well higher than your drawing surface but also lower than the changer post so you don't crash into it.  Once you find your happy place that doesn't draw and doesn't crash into the changer, set that as your `Z-Stage`.
 
 ![z-stage](https://user-images.githubusercontent.com/6083980/137353331-cf4c5993-07f8-45a8-9263-062f6b812a33.png)
+
+## FCC Comment
 
 *As an Amazon Affiliate, I earn a small commission from qualifying purchases made from my referral links, which helps to fund more open-source projects like this one.*
