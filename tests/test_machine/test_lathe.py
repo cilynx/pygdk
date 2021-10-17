@@ -13,11 +13,11 @@ def test_lathe_missing_conf():
         lathe = Lathe('non-existent.json')
 
 def test_lathe_blank_conf():
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(ValueError):
         lathe = Lathe('')
 
 def test_lathe_null_conf():
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         lathe = Lathe(None)
 
 def test_lathe_conf_not_provided():
@@ -26,8 +26,8 @@ def test_lathe_conf_not_provided():
 
 def test_lathe_conf_with_bad_tt():
     with pytest.raises(FileNotFoundError):
-        lathe = Lathe('tests/test_machine/bad_tt.json')
+        lathe = Lathe('tests/bad_tt.json')
 
 def test_lathe_conf_with_no_tt():
     with pytest.raises(KeyError):
-        lathe = Lathe('tests/test_machine/no_tt.json')
+        lathe = Lathe('tests/no_tt.json')

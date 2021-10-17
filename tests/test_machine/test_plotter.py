@@ -13,11 +13,11 @@ def test_plotter_missing_conf():
         plotter = Plotter('non-existent.json')
 
 def test_plotter_blank_conf():
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(ValueError):
         plotter = Plotter('')
 
 def test_plotter_null_conf():
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         plotter = Plotter(None)
 
 def test_plotter_conf_not_provided():
@@ -26,4 +26,4 @@ def test_plotter_conf_not_provided():
 
 def test_plotter_conf_with_no_plotter():
     with pytest.raises(KeyError):
-        plotter = Plotter('tests/test_machine/bad_tt.json')
+        plotter = Plotter('tests/bad_tt.json')

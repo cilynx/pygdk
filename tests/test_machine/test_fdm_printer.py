@@ -13,11 +13,11 @@ def test_fdm_printer_missing_conf():
         fdm_printer = FDMPrinter('non-existent.json')
 
 def test_fdm_printer_blank_conf():
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(ValueError):
         fdm_printer = FDMPrinter('')
 
 def test_fdm_printer_null_conf():
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         fdm_printer = FDMPrinter(None)
 
 def test_fdm_printer_conf_not_provided():

@@ -13,11 +13,11 @@ def test_mill_missing_conf():
         mill = Mill('non-existent.json')
 
 def test_mill_blank_conf():
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(ValueError):
         mill = Mill('')
 
 def test_mill_null_conf():
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         mill = Mill(None)
 
 def test_mill_conf_not_provided():
@@ -26,8 +26,8 @@ def test_mill_conf_not_provided():
 
 def test_mill_conf_with_bad_tt():
     with pytest.raises(FileNotFoundError):
-        mill = Mill('tests/test_machine/bad_tt.json')
+        mill = Mill('tests/bad_tt.json')
 
 def test_mill_conf_with_no_tt():
     with pytest.raises(KeyError):
-        mill = Mill('tests/test_machine/no_tt.json')
+        mill = Mill('tests/no_tt.json')

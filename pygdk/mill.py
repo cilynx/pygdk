@@ -19,11 +19,11 @@ class Mill(Machine):
     def __init__(self, json_file):
         super().__init__(json_file)
         print(f";{YELLOW} Loading Mill parameters from JSON{ENDC}")
-        with open(json_file) as f:
+        with open(f"machines/{json_file}") as f:
             dict = json.load(f)
             if 'Tool Table' not in dict:
                 raise KeyError(f"{RED}You machine configuration must reference a tool table file{ENDC}")
-            with open(dict['Tool Table'], 'r') as tt:
+            with open(f"tables/{dict['Tool Table']}", 'r') as tt:
                 self._tool_table = json.load(tt)
             self.max_rpm = dict['Max Spindle RPM']
             self.safe_z = 10 #TODO: This should be in a Workpiece class

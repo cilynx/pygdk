@@ -20,7 +20,9 @@ class Machine:
 
     def __init__(self, json_file):
         print(f";{YELLOW} Loading Machine parameters from JSON{ENDC}")
-        with open(json_file) as f:
+        if not json_file:
+            raise ValueError(f"{RED}All machines must be initialized with a JSON config.  See https://github.com/cilynx/pygdk#quickstart for a quick introduction.")
+        with open(f"machines/{json_file}") as f:
             dict = json.load(f)
             self.name = dict['Name']
             self.max_feed = dict['Max Feed Rate (mm/min)']
@@ -157,7 +159,7 @@ class Machine:
 
     def update_fas(self):
         if self.material and self.tool:
-            fas_file = 'feeds-and-speeds.json'
+            fas_file = 'tables/feeds-and-speeds.json'
             with open(fas_file, 'r') as fas:
                 self._fas = json.load(fas)
             sfm = self._fas['SFM']
