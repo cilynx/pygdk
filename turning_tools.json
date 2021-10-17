@@ -1,0 +1,96 @@
+{
+  "1": {
+    "manufacturer": "Accusize",
+    "holder": "MGEHR08-2J",
+    "insert": "MGMN200",
+    "shank": 0.5,
+    "width": 0.079,
+    "description": "Cut-Off",
+    "sfm": {
+      "Alloy Steel": [196, 360],
+      "Low-Carbon Steel": [262, 492],
+      "Carbon Steel <= HB200": [328, 656],
+      "Carbon Steel >= HB200": [328, 492]
+    },
+    "info": "https://accusizetools.com/products/7-pieces-set-indexable-carbide-turning-tools"
+  },
+  "2": {
+    "manufacturer": "Accusize",
+    "holder": "SER0500J11",
+    "insert": "11ER",
+    "shank": 0.5,
+    "description": "Threading",
+    "sfm": {
+      "Alloy Steel": [229, 524],
+      "Low-Carbon Steel": [328, 590],
+      "Medium-Carbon Steel": [262, 524],
+      "High-Carbon Steel": [196, 459]
+    },
+    "info": "https://accusizetools.com/products/7-pieces-set-indexable-carbide-turning-tools"
+  },
+  "3": {
+    "manufacturer": "Accusize",
+    "holder": "SDNCN08-2J",
+    "insert": "DCMT21.5",
+    "shank": 0.5,
+    "sfm": {
+      "Alloy Steel": [31,43],
+      "Low-Carbon Steel": [55,70],
+      "Medium-Carbon Steel": [39,51],
+      "Tool Steel": [35,47]
+    },
+    "info": "https://accusizetools.com/products/7-pieces-set-indexable-carbide-turning-tools"
+  },
+  "4": {
+    "manufacturer": "Accusize",
+    "holder": "SWGCR08-2J",
+    "insert": "WCMT2.52",
+    "shank": 0.5,
+    "sfm": {
+      "Alloy Steel": [31,43],
+      "Low-Carbon Steel": [55,70],
+      "Medium-Carbon Steel": [39,51],
+      "Tool Steel": [35,47]
+    },
+    "info": "https://accusizetools.com/products/7-pieces-set-indexable-carbide-turning-tools"
+  },
+  "5": {
+    "manufacturer": "Accusize",
+    "holder": "SDJCR08-2J",
+    "insert": "DCMT21.5",
+    "shank": 0.5,
+    "sfm": {
+      "Alloy Steel": [31,43],
+      "Low-Carbon Steel": [55,70],
+      "Medium-Carbon Steel": [39,51],
+      "Tool Steel": [35,47]
+    },
+    "info": "https://accusizetools.com/products/7-pieces-set-indexable-carbide-turning-tools"
+  },
+  "6": {
+    "manufacturer": "Accusize",
+    "holder": "SCLCR08-2J",
+    "insert": "CCMT21.5",
+    "shank": 0.5,
+    "sfm": {
+      "Alloy Steel": [31,43],
+      "Low-Carbon Steel": [55,70],
+      "Medium-Carbon Steel": [39,51],
+      "Tool Steel": [35,47]
+    },
+    "info": "https://accusizetools.com/products/7-pieces-set-indexable-carbide-turning-tools"
+  },
+  "7": {
+    "manufacturer": "Accusize",
+    "holder": "SCLCL08-2J",
+    "insert": "CCMT21.5",
+    "shank": 0.5,
+    "sfm": {
+      "Alloy Steel": [31,43],
+      "Low-Carbon Steel": [55,70],
+      "Medium-Carbon Steel": [39,51],
+      "Tool Steel": [35,47]
+    },
+    "info": "https://accusizetools.com/products/7-pieces-set-indexable-carbide-turning-tools"
+  }
+}

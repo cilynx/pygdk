@@ -1,0 +1,6 @@
+{
+   "Name": "ORAC",
+   "Max Feed Rate (mm/min)": 1000,
+   "Max Spindle RPM": 5000,
+   "Tool Table": "non-existent.json"
+}

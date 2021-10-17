@@ -1,5 +1,5 @@
-from pygdk.machine import Machine
-machine = Machine('onefinity.json')
+from pygdk.plotter import Plotter
+machine = Plotter('onefinity.json')
 
 def test_goto():
     turtle = machine.turtle()

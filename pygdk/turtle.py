@@ -17,8 +17,6 @@ class Turtle:
         self._machine = machine
         self._isdown = False
         self._mode = mode
-        self._cut = False
-        self._yaw = 0
         self._heading = [1,0,0]
         self._normal = [0,0,1]
         self._right = [0,-1,0]
@@ -163,7 +161,7 @@ class Turtle:
             self._y = y
         if z is not None:
             self._z = z
-        self._machine.move(self._x, self._y, self._z, e, cut=self._isdown, comment=comment)
+        self._machine.move(self._x, self._y, self._z, e, li=self._isdown, comment=comment)
 
     setpos = goto
     setposition = goto
@@ -337,7 +335,7 @@ class Turtle:
 
     def pendown(self, z=None):
         self._isdown = True
-        self._machine.cut(z=self._z_draw, comment="Pendown" if self._verbose else None)
+        self._machine.linear_interpolation(z=self._z_draw, comment="Pendown" if self._verbose else None)
         self._z = z if z is not None else self._z_draw
 
     pd = pendown

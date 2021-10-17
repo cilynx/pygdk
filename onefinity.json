@@ -1,6 +1,5 @@
 {
    "Name": "Onefinity",
-   "Type": "Mill",
    "Max Feed Rate (mm/min)": 10000,
    "Max Spindle RPM": 24000,
    "Tool Table": "tools.json",

@@ -1,20 +1,7 @@
 {
    "Name": "Kossel",
-   "Type": "FDM Printer",
-   "Max Feed Rate (mm/min)": 10000,
-   "Max Spindle RPM": 24000,
-   "Tool Table": "tools.json",
-   "Plotter": {
-      "Magazine": [
-         ["","Light Blue","Lime",""],
-         ["Black","Red","Blue","Orange"]
-      ],
-      "Slot Zero": [806,33],
-      "Pen Spacing": 13.7,
-      "Z-Touch": -123,
-      "Z-Click": -88,
-      "Z-Stage": -110
-   },
+   "Max Feed Rate (mm/min)": 5000,
+   "Filament Table": "filament.json",
    "Start G-Code": [
      ["M80", "Turn mains power on"],
      ["G28", "Go home"]

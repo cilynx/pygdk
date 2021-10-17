@@ -1,5 +1,4 @@
 import json
-import os
 import sys
 import math
 
@@ -15,88 +14,35 @@ ENDC   = '\033[0m'
 
 class Machine:
 
-    MILL = 'Mill'
-    LATHE = 'Lathe'
-    FDM_PRINTER = 'FDM Printer'
-
 ################################################################################
-# Initializer -- Load details from JSON or populate from passed parameters
+# Initializer -- Load details from JSON
 ################################################################################
 
-    def __init__(self, name=None, type=None, max_feed=None, safe_z=10):
-        if os.path.exists(name):
-            if type is not None or max_feed is not None:
-                raise ValueError(f"Machine must be initialized by JSON or parameters, but not both")
-            print(f";{YELLOW} Loading Machine parameters from JSON{ENDC}")
-            with open(name) as f:
-                dict = json.load(f)
-                name = dict['Name']
-                type = dict['Type']
-                max_feed = dict['Max Feed Rate (mm/min)']
-                self._max_rpm = dict['Max Spindle RPM']
-                if 'Tool Table' in dict:
-                    tt_file = dict['Tool Table']
-                    if os.path.exists(tt_file):
-                        with open(tt_file, 'r') as tt:
-                            self._tool_table = json.load(tt)
-                    else:
-                        raise ValueError(f"No such file: {tt_file}")
-                else:
-                    self._tool_table = None
-                if 'Plotter' in dict:
-                    self._plotter = dict['Plotter']
-                else:
-                    self._plotter = None
-        if not type in [self.MILL, self.LATHE, self.FDM_PRINTER]:
-            raise ValueError(f"Machine type ({type}) must be Machine.MILL, Machine.LATHE, or Machine.FDM_PRINTER")
-        self._type = type
-        self._max_feed = max_feed
-        self._safe_z = safe_z
-        if name is None:
-            self._name = type
-        else:
-            self._name = name
-        self._x_offset = 0
-        self._y_offset = 0
-        self._z_offset = 0
-        self._tool = None
-        self._absolute = None
-        self._feed = None
-        self._turtle = None
-        self._optimize = False
-        self._x = 0
-        self._y = 0
-        self._z = 0
-        self._linear_moves = {None:[]}
-        self._optimize_tool = None
-        self._material = None
-        self._x_clear = None
-        self._y_clear = None
-        self._z_clear = None
-        print(f";{YELLOW} Initializing a {self.type} named {self.name}{ENDC}")
-
-################################################################################
-# Persist Machine parameters as JSON
-################################################################################
-
-    @property
-    def json(self):
-        dict = {
-            "Name": self._name,
-            "Type": self._type,
-            "Max Feed Rate (mm/min)": self._max_feed,
-            "Max Spindle RPM": self._max_rpm
-        }
-        return json.dumps(dict, indent=2)
-
-    def save_json(self, file, prompt=True):
-        if prompt and os.path.exists(file):
-            print(f"Overwrite {file}? (y/n) ")
-            response = sys.stdin.read(1)
-            if response != 'y':
-                return
-        with open(file, 'w'):
-            f.write(self.json + '\n')
+    def __init__(self, json_file):
+        print(f";{YELLOW} Loading Machine parameters from JSON{ENDC}")
+        with open(json_file) as f:
+            dict = json.load(f)
+            self.name = dict['Name']
+            self.max_feed = dict['Max Feed Rate (mm/min)']
+            self._x_offset = 0
+            self._y_offset = 0
+            self._z_offset = 0
+            self._tool = None
+            self._absolute = None
+            self._feed = None
+            self._css = 0
+            self._turtle = None
+            self._optimize = False
+            self._x = 0
+            self._y = 0
+            self._z = 0
+            self._linear_moves = {None:[]}
+            self._optimize_tool = None
+            self._material = None
+            self._x_clear = None
+            self._y_clear = None
+            self._z_clear = None
+            print(f";{YELLOW} Initializing {self.name}{ENDC}")
 
 ################################################################################
 # CAMotics-compatible Tool Table
@@ -115,33 +61,52 @@ class Machine:
             raise ValueError(f"Must load Tool Table before using it")
 
 ################################################################################
-# Machine.type -- 'Mill' or 'Lathe'.  Determines how CSS is calculated.
+# Object representing the current Tool
 ################################################################################
 
     @property
-    def type(self):
-        return self._type
+    def tool(self):
+        return self._tool
 
-    @type.setter
-    def name (self, value):
-        print(f";{YELLOW} Setting {self.name} machine type: {value}{ENDC}")
-        self._type = value
+    @tool.setter
+    def tool(self, tool):
+        previous_tool = self.tool
+        if isinstance(tool, int):
+            self._tool = self.tool_from_tool_table(tool)
+        elif isinstance(tool, str):
+            self._tool = self.tool_from_tool_table(tool)
+            tool = self._tool.number
+        elif isinstance(tool, Tool):
+            self._tool = tool
+            tool = self._tool.number
+        else:
+            raise TypeError(f"{RED}Machine.tool must be set to an int (Tool Number), str (Tool Description), or Tool object{ENDC}")
+        if 'Sharpie' not in self.tool._description:
+            if previous_tool is None:
+                print(f";{CYAN} Assuming first tool is already loaded{ENDC}")
+            else:
+                print(f";{CYAN} Coming around for Tool Change{ENDC}")
+                position = [self._x, self._y, self._z]
+                self.full_retract()
+                if self._y_clear is not None:
+                    self.rapid(y=self._y_clear, comment="Clearing to _y_clear")
+                self.rapid(x=0, machine_coord=True, comment="Zero left")
+                self.rapid(y=0, machine_coord=True, comment="Zero forward")
+                self.pause(self.tool._description)
+                if self._y_clear is not None:
+                    self.rapid(y=self._y_clear)
+                self.rapid(x=position[0])
+                self.rapid(y=position[1])
+    #            self.rapid(z=-10, machine_coord=True)
+            print(f"M6 T{tool} ;{GREEN} Select Tool {tool}{ENDC}")
+        else:
+            print(f";{YELLOW} Select Tool {tool}{ENDC}")
+        print(f";{CYAN} End Tool Change{ENDC}")
+        if self.material:
+            self.update_fas()
 
 ################################################################################
-# Machine.name -- Only used for display, to make things more human-friendly.
-################################################################################
-
-    @property
-    def name(self):
-        return self._name
-
-    @name.setter
-    def name (self, value):
-        print(f";{YELLOW} Renaming {self.name}: {value}{ENDC}")
-        self._name = value
-
-################################################################################
-# Tool Offsets -- Mostly for the Plotter
+# Tool Offsets
 ################################################################################
 
     @property
@@ -172,51 +137,6 @@ class Machine:
         self._z_offset = value
 
 ################################################################################
-# Machine.tool -- Object representing the current Tool
-################################################################################
-
-    @property
-    def tool(self):
-        return self._tool
-
-    @tool.setter
-    def tool(self, tool):
-        previous_tool = self.tool
-        if isinstance(tool, int):
-            self._tool = self.tool_from_tool_table(tool)
-        elif isinstance(tool, str):
-            self._tool = self.tool_from_tool_table(tool)
-            tool = self._tool.number
-        elif isinstance(tool, Tool):
-            self._tool = tool
-            tool = self._tool.number
-        else:
-            raise TypeError(f"{RED}Machine.tool must be set to an int (Tool Number), str (Tool Description), or Tool object{ENDC}")
-        if 'Sharpie' not in self.tool._description or self._simulate:
-            if previous_tool is None:
-                print(f";{CYAN} Assuming first tool is already loaded{ENDC}")
-            else:
-                print(f";{CYAN} Coming around for Tool Change{ENDC}")
-                position = [self._x, self._y, self._z]
-                self.full_retract()
-                if self._y_clear is not None:
-                    self.rapid(y=self._y_clear, comment="Clearing to _y_clear")
-                self.rapid(x=0, machine_coord=True, comment="Zero left")
-                self.rapid(y=0, machine_coord=True, comment="Zero forward")
-                self.pause(self.tool._description)
-                if self._y_clear is not None:
-                    self.rapid(y=self._y_clear)
-                self.rapid(x=position[0])
-                self.rapid(y=position[1])
-    #            self.rapid(z=-10, machine_coord=True)
-            print(f"M6 T{tool} ;{GREEN} Select Tool {tool}{ENDC}")
-        else:
-            print(f";{YELLOW} Select Tool {tool}{ENDC}")
-        print(f";{CYAN} End Tool Change{ENDC}")
-        if self.material:
-            self.update_fas()
-
-################################################################################
 # Machine.material -- Workpiece material.  Still thinking about a separate class
 ################################################################################
 
@@ -238,9 +158,8 @@ class Machine:
     def update_fas(self):
         if self.material and self.tool:
             fas_file = 'feeds-and-speeds.json'
-            if os.path.exists(fas_file):
-                with open(fas_file, 'r') as fas:
-                    self._fas = json.load(fas)
+            with open(fas_file, 'r') as fas:
+                self._fas = json.load(fas)
             sfm = self._fas['SFM']
             chipload = self._fas['Chipload']
             cutter = self.tool.material
@@ -266,19 +185,6 @@ class Machine:
                         self.feed = self.rpm * self.tool.flutes * cl_mean * 25.4
                     else:
                         print(f";{RED} Tool not available in chipload table.  You're on your own for feeds and speeds.{ENDC}")
-
-################################################################################
-# Machine.safe_z -- This probably belongs in a Workpiece class, not here
-################################################################################
-
-    @property
-    def safe_z(self):
-        return self._safe_z
-
-    @safe_z.setter
-    def safe_z(self, value):
-        print(f";{YELLOW} Setting {self.name} Safe Z: {value}{ENDC}")
-        self._safe_z = value
 
 ################################################################################
 # Machine.max_rpm -- Used in speeds and feeds calculations.
@@ -323,61 +229,6 @@ class Machine:
         print(f";{YELLOW} Using Machine Feed: {self.feed:.4f} mm/min | {self.feed/25.4:.4f} in/min | {self.feed/25.4/12:.4f} ft/min{ENDC}")
 
 ################################################################################
-# Machine.css - Constant Surface Speed
-################################################################################
-
-    @property
-    def css(self):
-        return self._css
-
-    @css.setter
-    def css(self, value):
-        print(f";{YELLOW} Desired Constant Surface Speed (CSS): {value:.4f} m/s | {value*196.85:.4f} ft/min{ENDC}")
-        if self.type == "Mill":
-            print(f";{YELLOW} Calculating RPM from CSS and tool diameter.{ENDC}")
-            rpm = value * 60000 / math.pi / self.tool.diameter
-            if rpm > self.max_rpm:
-                css = self.max_rpm * math.pi * self.tool.diameter / 60000
-                print(f";{RED} {self.name} cannot do {rpm:.4f} rpm.  Maxing out at {self.max_rpm} rpm | {css:.4f} m/s | {css*196.85:.4f} ft/min{ENDC}")
-                rpm = self.max_rpm;
-            print(f";{YELLOW} Setting RPM: {rpm:.4f} | {rpm/60:.4f} Hz on the VFD{ENDC}")
-            self._rpm = rpm
-
-    surface_speed = css
-
-################################################################################
-# Machine.rpm - Spindle Speed
-################################################################################
-
-    @property
-    def rpm(self):
-        return self._rpm
-
-    @rpm.setter
-    def rpm(self, value):
-        if value > self.max_rpm:
-            raise ValueError(f"Machine.rpm ({value}) must be lower than Machine.max_rpm ({self.max_rpm})")
-        self._rpm = value
-        print(f"G97 ;{GREEN} Constant Spindle Speed{ENDC}")
-        print(f"S{value:.4f} ;{GREEN} Set Spindle RPM: {value:.4f}{ENDC}")
-        # print(f"S{value}")
-        print(f";{YELLOW} Calculating CSS from RPM and tool diameter.{ENDC}")
-        if self.tool.diameter is not None:
-            self._css = self.rpm * math.pi * self.tool.diameter / 60000
-            print(f";{YELLOW} Calculated Tool Constant Surface Speed (CSS): {self.css:.4f} m/s | {self.css*196.85:.4f} ft/min{ENDC}")
-        else:
-            print(f";{RED} Cannot calculate CSS from RPM because tool diameter is undefined{ENDC}")
-        chip_load = 0.1 # mm/flute TODO: Parameterize this
-        flutes = 4 # TODO: Parameterize this
-        if chip_load is not None:
-            feed = chip_load * flutes * self.rpm # mm/min
-            print(f";{YELLOW} Calculated feed from chip load, flutes, and RPM: {feed:.4f} mm/min | {feed/304.8:.4f} ft/min{ENDC}")
-            if feed > self.max_feed:
-                print(f";{RED} {self.name} cannot feed at {feed:.4f} mm/min.  Maxing out at {self.max_feed} mm/min{ENDC}")
-                feed = self.max_feed
-            self.feed = feed
-
-################################################################################
 # Absolute & Incremental Movement Modes
 ################################################################################
 
@@ -410,11 +261,10 @@ class Machine:
     relative = incremental
 
 ################################################################################
-# Linear Moves -- Rapid, iRapid, Cut, and iCut
+# Linear Moves -- Rapid, iRapid, LI, and iLI
 ################################################################################
 
-    def move(self, x=None, y=None, z=None, e=None, absolute=True, machine_coord=False, cut=False, comment=None):
-#        print(f";{GREEN} Cut:{cut}, X:{x}, Y:{y}, Z:{z}, ABS:{absolute}{ENDC}")
+    def move(self, x=None, y=None, z=None, e=None, absolute=True, machine_coord=False, li=False, comment=None):
         if x is not None:
             x = x+self.x_offset
         if y is not None:
@@ -451,7 +301,7 @@ class Machine:
             raise NotImplementedError(f"{RED}Optimizing relative moves is not yet implemented")
         else:
             G = 'G53 G' if machine_coord else 'G'
-            print(f"{G}1" if cut else f"{G}0", end='')
+            print(f"{G}1" if li else f"{G}0", end='')
             if x is not None:
                 print(f" X{x:.4f}", end='')
                 self._x = x
@@ -463,19 +313,19 @@ class Machine:
                 self._z = z
             if e is not None:
                 print(f" E{e:.4f}", end='')
-            print(f" F{self.feed if cut else self.max_feed:.4f}", end='')
+            print(f" F{self.feed if li else self.max_feed:.4f}", end='')
             print(f" ;{GREEN} {comment}{ENDC}" if comment else '')
 
     rapid = move
 
     def irapid(self, u=None, v=None, w=None, comment=None):
-        self.move(u, v, w, absolute=False, cut=False, comment=comment)
+        self.move(u, v, w, absolute=False, li=False, comment=comment)
 
-    def cut(self, x=None, y=None, z=None, comment=None):
-        self.move(x, y, z, absolute=True, cut=True, comment=comment)
+    def linear_interpolation(self, x=None, y=None, z=None, comment=None):
+        self.move(x, y, z, absolute=True, li=True, comment=comment)
 
-    def icut(self, u=None, v=None, w=None, comment=None):
-        self.move(u, v, w, absolute=False, cut=True, comment=comment)
+    def i_linear_interpolation(self, u=None, v=None, w=None, comment=None):
+        self.move(u, v, w, absolute=False, li=True, comment=comment)
 
     def retract(self, x=None, y=None, comment="Retract"):
         self.move(x, y, self.safe_z, comment=comment)
@@ -846,61 +696,6 @@ class Machine:
             self.rapid(c_x, c_y, self.safe_z, comment="Retract")
 
         print(f";{CYAN} Rectangular Pocket | END{ENDC}")
-
-################################################################################
-# Pen Color
-################################################################################
-
-    @property
-    def pen_color(self):
-        return self.tool._description
-
-    @pen_color.setter
-    def pen_color(self, value):
-        if not self._plotter:
-            raise ValueError(f"{RED}You must configure a Plotter before you can set pen_color{ENDC}")
-
-        if self._optimize:
-            if value is None:
-#                print(json.dumps(self._linear_moves, indent=4))
-                self._optimize = False
-                for color in self._linear_moves:
-                    if color:
-                        self.pen_color = color
-                        for move in self._linear_moves[color]:
-                            self.rapid(move[0][0], move[0][1], move[0][2], comment="Rapid to next start")
-                            self.cut(move[1][0], move[1][1], move[1][2], comment="Execute move")
-            elif any(value in row for row in self._plotter['Magazine']):
-                self._linear_moves.setdefault(value,[])
-                self._optimize_tool = value
-            else:
-                raise ValueError(f"{RED}'{value}' is not a configured color.  Options are: {self._plotter['Magazine']}" )
-
-        else:
-            self.rapid(z=self._plotter['Z-Stage'], comment="Go to pen change staging height")
-            if self.tool:
-                self.rapid(x=self._plotter['Slot Zero'][0], y=self._plotter['Slot Zero'][1], z=self._plotter['Z-Stage'], comment="Stage to retract current pen")
-                self.rapid(z=self._plotter['Z-Click'], comment="Retract current pen")
-                self.rapid(z=self._plotter['Z-Stage'], comment="Return to pen change stage")
-            if value is None:
-                self.x_offset = 0;
-                self.y_offset = 0;
-                rows = len(self._plotter['Magazine'])
-                backset = self._plotter['Slot Zero'][1] + (rows+1)*self._plotter['Pen Spacing'];
-                self.rapid(x=self._plotter['Slot Zero'][0], y=backset, comment="Rapid to homing-safe backset")
-                return self.tool
-            for row in self._plotter['Magazine']:
-                if value in row:
-                    i = row.index(value)
-                    j = self._plotter['Magazine'].index(row)
-                    self.x_offset = -i*self._plotter['Pen Spacing']
-                    self.y_offset = j*self._plotter['Pen Spacing']
-                    self.rapid(x=self._plotter['Slot Zero'][0], y=self._plotter['Slot Zero'][1], z=self._plotter['Z-Stage'], comment="Stage to activate new pen")
-                    self.rapid(z=self._plotter['Z-Click'], comment="Activate new pen")
-                    self.rapid(z=self._plotter['Z-Stage'], comment="Return to pen change stage")
-                    self.tool = value
-                    return self.tool
-            raise ValueError(f"{RED}'{value}' is not a configured color.  Options are: {self._plotter['Magazine']}" )
 
 ################################################################################
 # Turtle Object Reference
