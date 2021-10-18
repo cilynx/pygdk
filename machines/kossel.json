@@ -1,10 +1,13 @@
 {
    "Name": "Kossel",
    "Max Feed Rate (mm/min)": 5000,
+   "Nozzle Diameter": 0.4,
    "Filament Table": "filament.json",
    "Start G-Code": [
      ["M80", "Turn mains power on"],
-     ["G28", "Go home"]
+     ["G28", "Go home"],
+     ["M82", "Use absolute extrusion"],
+     ["G92 E0", "Zero E"]
    ],
    "End G-Code": [
      ["M104 S0", "Turn off heaters"],

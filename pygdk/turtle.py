@@ -105,8 +105,8 @@ class Turtle:
 
     def roll(self, angle):
         angle = math.radians(angle)
-        self._right = np.dot([self._right], self.rot(self._heading, angle))[0]
-        self._normal = np.dot([self._normal], self.rot(self._heading, angle))[0]
+        self._right = self.dot([self._right], self.rot(self._heading, angle))[0]
+        self._normal = self.dot([self._normal], self.rot(self._heading, angle))[0]
 
 ################################################################################
 # Turtle.pitch - Tilt up or down without changing the side vector
@@ -239,14 +239,14 @@ class Turtle:
 # automatically. May be used to draw regular polygons.
 ################################################################################
 
-    def circle(self, radius, extent=360, steps=10, e=None, comment=None):
+    def circle(self, radius, extent=360, steps=10, comment=None):
         side = abs(2*radius*math.sin(math.pi*extent/360/steps))
         angle = extent/steps if radius > 0 else -extent/steps
         self.left(angle/2)
-        self.forward(side)
+        self.forward(side, comment=comment)
         for i in range(steps-1):
             self.left(angle)
-            self.forward(side, e=e, comment=comment)
+            self.forward(side, comment=comment)
         self.left(angle/2)
 
 ################################################################################
@@ -409,3 +409,32 @@ class Turtle:
             self.reset()
         else:
             raise ValueError(f"{RED}Turtle.mode can only be set to \"logo\" or \"standard\"")
+
+################################################################################
+# Squirtle -- A turtle that extrudes filament
+################################################################################
+
+class Squirtle(Turtle):
+    def __init__(self, printer, verbose=False):
+        super().__init__(printer, verbose)
+        self.extrusion_multiplier = 1
+        self.extrude = False
+        self.e = 0
+
+    def penup(self):
+        self.extrude = False
+        self._isdown = False
+
+    def pendown(self):
+        self.extrude = True
+        self._isdown = True
+
+    def pencolor(self):
+        print(f";{RED} Pen colors are disabled for Squirtle.  Maybe someday I'll play with multiple extruders.{ENDC}")
+
+    def forward(self, distance, dz=0, comment=None):
+        if self.extrude:
+            #TODO: Filament object
+            self.e = self.e + self.extrusion_multiplier*(self._machine.nozzle_d*distance*0.2)/(math.pi*(1.75/2)**2)
+            comment = f"Pumping {self.extrusion_multiplier*(self._machine.nozzle_d*distance*0.2)/(math.pi*(1.75/2)**2):.4f}mm of filament"
+        super().forward(distance, dz, self.e, comment)
