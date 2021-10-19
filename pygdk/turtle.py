@@ -417,15 +417,24 @@ class Turtle:
 class Squirtle(Turtle):
     def __init__(self, printer, verbose=False):
         super().__init__(printer, verbose)
+        self.printer = printer
         self.extrusion_multiplier = 1
         self.extrude = False
         self.e = 0
 
+    # def __del__(self):
+    #     self.penup()
+    #     super().__del__()
+
     def penup(self):
+        self.e -= self.printer.retract_f
+        self.goto(e=self.e, comment="Retract filament")
         self.extrude = False
         self._isdown = False
 
     def pendown(self):
+        self.e += self.printer.retract_f + self.printer.extra_push
+        self.goto(e=self.e, comment="Reprime filament")
         self.extrude = True
         self._isdown = True
 

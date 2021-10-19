@@ -25,6 +25,9 @@ class FDMPrinter(Machine):
             with open(f"tables/{self.dict['Filament Table']}", 'r') as ft:
                 self.filament_table = json.load(ft)
             self.nozzle_d = self.dict['Nozzle Diameter']
+            self.retract_f = self.dict['Retraction']
+            self.extra_push = self.dict['Extra Push']
+            self.feed = self.dict['Max Feed Rate (mm/min)']
             for line in self.dict['Start G-Code']:
                 print(f"{line[0]} ;{GREEN} {line[1]}{ENDC}")
 
