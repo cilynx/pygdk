@@ -34,4 +34,4 @@ def test_squirtle_penupdown():
     squirtle.penup()
     assert squirtle.extrude == False
     squirtle.forward(10)
-    assert squirtle.e == e
+    assert squirtle.e == e-squirtle._machine.retract_f
