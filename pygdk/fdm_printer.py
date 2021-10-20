@@ -32,8 +32,9 @@ class FDMPrinter(Machine):
                 print(f"{line[0]} ;{GREEN} {line[1]}{ENDC}")
 
     def __del__(self):
-        for line in self.dict['End G-Code']:
-            print(f"{line[0]} ;{GREEN} {line[1]}{ENDC}")
+        if hasattr(self, 'dict'):
+            for line in self.dict.get('End G-Code', []):
+                print(f"{line[0]} ;{GREEN} {line[1]}{ENDC}")
 
     def squirtle(self, verbose=False):
         return Squirtle(self, verbose)

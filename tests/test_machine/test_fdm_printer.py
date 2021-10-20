@@ -26,7 +26,7 @@ def test_fdm_printer_conf_not_provided():
 
 def test_fdm_printer_conf_with_bad_filament_table():
     with pytest.raises(FileNotFoundError):
-        fdm_printer = FDMPrinter('tests/test_machine/bad_filament.json')
+        fdm_printer = FDMPrinter('tests/bad_filament.json')
 
 def test_fdm_printer_conf_with_no_filament_table():
     with pytest.raises(KeyError):

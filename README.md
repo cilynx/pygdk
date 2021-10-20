@@ -328,6 +328,6 @@ Jog the magazine down now such that you unactuated pen tops are just a bit lower
 
 ![z-stage](https://user-images.githubusercontent.com/6083980/137353331-cf4c5993-07f8-45a8-9263-062f6b812a33.png)
 
-## FCC Comment
+## FTC Comment
 
 *As an Amazon Affiliate, I earn a small commission from qualifying purchases made from my referral links, which helps to fund more open-source projects like this one.*
