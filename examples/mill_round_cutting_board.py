@@ -33,3 +33,4 @@ turtle.right(attachment_angle)
 turtle.forward(handle_length)
 turtle.penup()
 
+onefinity.print()
