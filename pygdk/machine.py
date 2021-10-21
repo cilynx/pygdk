@@ -58,6 +58,7 @@ class Machine:
             self._x_clear = None
             self._y_clear = None
             self._z_clear = None
+            self.gcode = None
 
 ################################################################################
 # Command Queue
@@ -736,10 +737,11 @@ class Machine:
         self.queue(code=f"M0 (MSG, {msg})")
 
 ################################################################################
-# Print to stdout
+# Generate G-code
 ################################################################################
 
-    def print(self):
+    def generate_gcode(self):
+        self.gcode = []
         styles = {
             '': GREEN,
             'warning': RED,
@@ -753,26 +755,46 @@ class Machine:
             'mill': ORANGE
         }
         for command in self.command_queue:
+            line = ""
             if command.get('code',None) is not None:    # Code
-                print(f"{command.get('code','')}", end='')
+                line += f"{command.get('code','')}"
             if command.get('x',None) is not None:       # X-coordinate
-                print(f" X{command['x']:.4f}", end='')
+                line += f" X{command['x']:.4f}"
             if command.get('y',None) is not None:       # Y-coordinate
-                print(f" Y{command['y']:.4f}", end='')
+                line += f" Y{command['y']:.4f}"
             if command.get('z',None) is not None:       # Z-coordinate
-                print(f" Z{command['z']:.4f}", end='')
+                line += f" Z{command['z']:.4f}"
             if command.get('e',None) is not None:       # Extruder Position
-                print(f" E{command['e']:.4f}", end='')
+                line += f" E{command['e']:.4f}"
             if command.get('i',None) is not None:       # Arc Center X-offset
-                print(f" I{command['i']:.4f}", end='')
+                line += f" I{command['i']:.4f}"
             if command.get('j',None) is not None:       # Arc Center Y-offset
-                print(f" J{command['j']:.4f}", end='')
+                line += f" J{command['j']:.4f}"
             if command.get('p',None) is not None:       # Number of helix turns
-                print(f" P{command['p']}", end='')
+                line += f" P{command['p']}"
             if command.get('f',None) is not None:       # Feed Rate
-                print(f" F{command['f']:.4f}", end='')
+                line += f" F{command['f']:.4f}"
             if command.get('s',None) is not None:       # Spindle RPM, Bed/Hotend Temperature
-                print(f" S{command['s']:.4f}", end='')
+                line += f" S{command['s']:.4f}"
             if command.get('comment',None) is not None: # Human-readable comments
-                print(f"; {styles[command.get('style', '')]}{command.get('comment', '')}{ENDC}", end='')
-            print()
+                line += f"; {styles[command.get('style', '')]}{command.get('comment', '')}{ENDC}"
+            self.gcode.append(line)
+
+################################################################################
+# Print G-code to stdout
+################################################################################
+
+    def print_gcode(self):
+        if not self.gcode:
+            self.generate_gcode()
+        print("\n".join(self.gcode))
+
+################################################################################
+# Save G-code to File
+################################################################################
+
+    def save_gcode(self, filename=sys.argv[0]+'.nc'):
+        if not self.gcode:
+            self.generate_gcode()
+        with open(filename, 'w') as file:
+            file.write("\n".join(self.gcode))

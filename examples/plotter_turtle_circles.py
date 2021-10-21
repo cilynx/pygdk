@@ -14,4 +14,4 @@ for i in range(count):
     turtle.left(segment)
     turtle.circle(10, steps=100)
 
-onefinity.print()
+onefinity.print_gcode()

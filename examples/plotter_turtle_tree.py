@@ -23,4 +23,4 @@ def branch(iteration, branchLength, angle):
 
 branch(7, 50, 30)
 
-onefinity.print()
+onefinity.print_gcode()

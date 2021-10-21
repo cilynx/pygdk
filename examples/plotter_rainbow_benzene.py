@@ -16,4 +16,4 @@ for x in range(360):
     turtle.left(59.8)
 
 onefinity.pen_color = None
-onefinity.print()
+onefinity.print_gcode()

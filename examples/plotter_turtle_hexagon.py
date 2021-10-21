@@ -16,4 +16,4 @@ for i in range(num_sides):
     turtle.right(angle)
 turtle.penup()
 
-onefinity.print()
+onefinity.print_gcode()

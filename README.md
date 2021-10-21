@@ -30,6 +30,8 @@ onefinity.tool = '1/4" Downcut'
 
 onefinity.helix(c_x=0, c_y=0, diameter=67, depth=21, z_step=10)
 onefinity.helix(c_x=0, c_y=0, diameter=77, depth=21, z_step=10, outside=True)
+
+onefinity.print_gcode()
 ```
 This design assumes your stock is 21mm thick and that you'll be zeroing Z on the surface.  
 
@@ -62,6 +64,11 @@ Take a deep breath, remember that you are personally responsible for everything 
 from pygdk import Machine
 
 machine = Machine('onefinity.json')
+
+# Do stuff
+
+machine.print_gcode() # Dump generated gcode to stdout
+machine.save_gcode() # Save generated gcode to a file
 ```
 
 To get started, import the `Machine` class and create your primary `Machine` object that you'll use to do pretty much everything else.  Check out [onefinity.json](machines/onefinity.json) for a fleshed out configuration and [rf30.json](machines/rf30.json) for a minimal example.
@@ -82,7 +89,7 @@ Defining your workpiece material is not required, but if you do,  `pygdk` will a
 machine.feed = 500
 ```
 
-This is the feed for your cutting moves.  It is separate from `max_feed` which is the feed used for rapid (non-cutting) moves and is defined in your machine configuration JSON.  If you do not define the workpiece [material](#material) and tool specifications, you have to set the feed manually before `pygdk` can generate gcode.  Setting `feed` manually will override a previously calculated value.
+This is the feed for your G1 (cutting, drawing, etc.) moves.  It is separate from `max_feed` which is the feed used for G0 (rapid) moves and is defined in your machine configuration JSON.  If you do not define the workpiece [material](#material) and tool specifications, you have to set the feed manually before `pygdk` can generate gcode.  Setting `feed` manually will override a previously calculated value.
 
 ##### Constant Surface Speed
 
@@ -111,16 +118,16 @@ When you set `rpm` and have your tool parameters defined, [css](#constant-surfac
 ```
 machine.rapid(x,y,z)
 machine.irapid(u,v,w)
-machine.cut(x,y,z)
-machine.icut(u,v,w)
+machine.li(x,y,z)
+machine.ili(u,v,w)
 ```
-`rapid` moves (`G0`) at `max_feed` without cutting to the absolute point [x,y,z] in the currently defined coordinate system.
+`rapid` moves (`G0`) at `max_feed` generally not cutting/drawing to the absolute point [x,y,z] in the currently defined coordinate system.
 
-`irapid` moves (`G0`) at `max_feed` without cutting to the relative point [u,v,w] away from the current position.
+`irapid` moves (`G0`) at `max_feed` generally not cutting/drawing to the relative point [u,v,w] away from the current position.
 
-`cut` moves (`G1`) at `feed`, cutting to the absolute point [x,y,z] in the currently defined coordinate system.
+`li` moves (`G1`) at `feed`, generally cutting/drawing to the absolute point [x,y,z] in the currently defined coordinate system.
 
-`icut` moves (`G1`) at `feed`, cutting to the relative point [u,v,w] away from the current position.
+`ili` moves (`G1`) at `feed`, generally cutting/drawing to the relative point [u,v,w] away from the current position.
 
 All moves take an optional `comment` string parameter that will be included on the relevant line of gcode.
 

@@ -37,4 +37,4 @@ box(width/2, length/2)
 box(width+5+width/2, length/2)
 onefinity.frame((2*width+5)/2, length/2, x=2*width+10, y=length, z_bottom=-height)
 
-onefinity.print()
+onefinity.print_gcode()

@@ -29,4 +29,4 @@ for i in range(180):
 
 onefinity.pen_color = None
 
-onefinity.print()
+onefinity.print_gcode()
