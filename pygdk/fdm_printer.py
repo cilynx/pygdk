@@ -17,7 +17,7 @@ ENDC   = '\033[0m'
 class FDMPrinter(Machine):
     def __init__(self, json_file):
         super().__init__(json_file)
-        print(f";{YELLOW} Loading FDMPrinter parameters from JSON{ENDC}")
+        self.queue(comment='Loading FDMPrinter parameters from JSON', style='fdm_printer')
         with open(f"machines/{json_file}") as f:
             self.dict = json.load(f)
             if 'Filament Table' not in self.dict:
@@ -29,12 +29,12 @@ class FDMPrinter(Machine):
             self.extra_push = self.dict['Extra Push']
             self.feed = self.dict['Max Feed Rate (mm/min)']
             for line in self.dict['Start G-Code']:
-                print(f"{line[0]} ;{GREEN} {line[1]}{ENDC}")
+                self.queue(code=line[0], comment=line[1])
 
     def __del__(self):
         if hasattr(self, 'dict'):
             for line in self.dict.get('End G-Code', []):
-                print(f"{line[0]} ;{GREEN} {line[1]}{ENDC}")
+                self.queue(code=line[0], comment=line[1])
 
     def squirtle(self, verbose=False):
         return Squirtle(self, verbose)
@@ -45,12 +45,12 @@ class FDMPrinter(Machine):
 
     def nozzle_temp(self, temp_c, block):
         if block:
-            print(f"M109 S{temp_c} ;{RED} Waiting for hotend to come up to temperature{ENDC}")
+            self.queue(code='M109', s=temp_c, comment="Waiting for hotend to come up to temperature", style='fdm_printer')
         else:
-            print(f"M104 S{temp_c} ;{ORANGE} Setting hotend temperature and moving on{ENDC}")
+            self.queue(code='M104', s=temp_c, comment="Setting hotend temperature and moving on", style='fdm_printer')
 
     def bed_temp(self, temp_c, block):
         if block:
-            print(f"M190 S{temp_c} ;{RED} Waiting for bed to come up to temperature{ENDC}")
+            self.queue(code='M190', s=temp_c, comment="Waiting for bed to come up to temperature", style='fdm_printer')
         else:
-            print(f"M140 S{temp_c} ;{ORANGE} Setting bed temperature and moving on{ENDC}")
+            self.queue(code='M140', s=temp_c, comment="Setting bed temperature and moving on", style='fdm_printer')

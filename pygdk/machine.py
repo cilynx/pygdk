@@ -5,11 +5,22 @@ import math
 from .tool import Tool
 from .turtle import Turtle
 
+BLACK  = '\033[30m'
 RED    = '\033[31m'
-ORANGE = '\033[91m'
-YELLOW = '\033[93m'
-GREEN  = '\033[92m'
+GREEN  = '\033[32m'
+BROWN  = '\033[33m'
+BLUE   = '\033[34m'
+PURPLE = '\033[35m'
 CYAN   = '\033[36m'
+WHITE  = '\033[37m'
+GREY   = '\033[90m'
+ORANGE = '\033[91m'
+LT_GREEN    = '\033[92m'
+YELLOW      = '\033[93m'
+LT_BLUE     = '\033[94m'
+LT_PURPLE   = '\033[95m'
+LT_CYAN     = '\033[96m'
+LT_WHITE    = '\033[97m'
 ENDC   = '\033[0m'
 
 class Machine:
@@ -19,12 +30,15 @@ class Machine:
 ################################################################################
 
     def __init__(self, json_file):
-        print(f";{YELLOW} Loading Machine parameters from JSON{ENDC}")
         if not json_file:
             raise ValueError(f"{RED}All machines must be initialized with a JSON config.  See https://github.com/cilynx/pygdk#quickstart for a quick introduction.")
         with open(f"machines/{json_file}") as f:
             dict = json.load(f)
+            for req in ['Name', 'Max Feed Rate (mm/min)']:
+                if not dict.get(req, None):
+                    raise ValueError(f"{RED}All machines must have '{req}' defined in their JSON config.  See https://github.com/cilynx/pygdk/tree/main/machines for example configurations.")
             self.name = dict['Name']
+            self.command_queue = [{'comment': f"Initializing Machine {self.name}", 'style': 'machine'}]
             self.max_feed = dict['Max Feed Rate (mm/min)']
             self._x_offset = 0
             self._y_offset = 0
@@ -44,7 +58,13 @@ class Machine:
             self._x_clear = None
             self._y_clear = None
             self._z_clear = None
-            print(f";{YELLOW} Initializing {self.name}{ENDC}")
+
+################################################################################
+# Command Queue
+################################################################################
+
+    def queue(self, **kwargs):
+        self.command_queue.append(kwargs)
 
 ################################################################################
 # CAMotics-compatible Tool Table
@@ -85,9 +105,9 @@ class Machine:
             raise TypeError(f"{RED}Machine.tool must be set to an int (Tool Number), str (Tool Description), or Tool object{ENDC}")
         if 'Sharpie' not in self.tool._description:
             if previous_tool is None:
-                print(f";{CYAN} Assuming first tool is already loaded{ENDC}")
+                self.queue(comment="Assuming first tool is already loaded", style='machine')
             else:
-                print(f";{CYAN} Coming around for Tool Change{ENDC}")
+                self.queue(comment='Coming around for Tool Change', style='machine')
                 position = [self._x, self._y, self._z]
                 self.full_retract()
                 if self._y_clear is not None:
@@ -99,11 +119,10 @@ class Machine:
                     self.rapid(y=self._y_clear)
                 self.rapid(x=position[0])
                 self.rapid(y=position[1])
-    #            self.rapid(z=-10, machine_coord=True)
-            print(f"M6 T{tool} ;{GREEN} Select Tool {tool}{ENDC}")
+            self.queue(code=f"M6 T{tool}", comment=f"Select Tool {tool}", style='machine')
         else:
-            print(f";{YELLOW} Select Tool {tool}{ENDC}")
-        print(f";{CYAN} End Tool Change{ENDC}")
+            self.queue(comment=f"Select Tool {tool}", style='machine')
+        self.queue(comment=f"End Tool Change", style='machine')
         if self.material:
             self.update_fas()
 
@@ -117,7 +136,7 @@ class Machine:
 
     @x_offset.setter
     def x_offset (self, value):
-        print(f";{YELLOW} Setting x_offset: {value}{ENDC}")
+        self.queue(comment=f"Setting x_offset: {value}", style='machine')
         self._x_offset = value
 
     @property
@@ -126,7 +145,7 @@ class Machine:
 
     @y_offset.setter
     def y_offset (self, value):
-        print(f";{YELLOW} Setting y_offset: {value}{ENDC}")
+        self.queue(comment=f"Setting y_offset: {value}", style='machine')
         self._y_offset = value
 
     @property
@@ -135,7 +154,7 @@ class Machine:
 
     @z_offset.setter
     def z_offset (self, value):
-        print(f";{YELLOW} Setting z_offset: {value}{ENDC}")
+        self.queue(comment=f"Setting z_offset: {value}", style='machine')
         self._z_offset = value
 
 ################################################################################
@@ -166,27 +185,27 @@ class Machine:
             chipload = self._fas['Chipload']
             cutter = self.tool.material
             if self.material in sfm[cutter] and self.material in chipload:
-                print(f";{YELLOW} Workpiece is {self.material}{ENDC}")
+                self.queue(comment=f"Workpiece is {self.material}", style='machine')
 
                 if self.tool.rpm:
                     rpm = (self.tool.rpm[self.material][0]+self.tool.rpm[self.material][1])/2
-                    print(f";{YELLOW} Using tool manufacturer recommended spindle RPM: {rpm:.4f} rpm{ENDC}")
+                    self.queue(comment=f"Using tool manufacturer recommended spindle RPM: {rpm:.4f} rpm", style='machine')
                     self.rpm = rpm
                 else:
                     self.css = (sfm[cutter][self.material][0]+sfm[cutter][self.material][1])/2/196.85
 
                 if self.tool.ipm:
                     ipm = (self.tool.ipm[self.material][0]+self.tool.ipm[self.material][1])/2
-                    print(f";{YELLOW} Using tool manufacturer recommended feed: {ipm:.4f} in/min{ENDC}")
+                    self.queue(comment=f"Using tool manufacturer recommended feed: {ipm:.4f} in/min", style='machine')
                     self.feed = ipm*25.4
                 else:
-                    print(f";{YELLOW} No manufacturer-recommended IPM Feed.  Calculating.{ENDC}")
+                    self.queue(comment=f"No manufacturer-recommended IPM Feed.  Calculating.", style='machine')
                     cl_range = chipload[self.material].get(f"{self.tool.diameter/25.4:.3f}", None)
                     if cl_range:
                         cl_mean = (cl_range[0]+cl_range[1])/2
                         self.feed = self.rpm * self.tool.flutes * cl_mean * 25.4
                     else:
-                        print(f";{RED} Tool not available in chipload table.  You're on your own for feeds and speeds.{ENDC}")
+                        self.queue(comment=f"Tool not available in chipload table.  You're on your own for feeds and speeds.", style='warning')
 
 ################################################################################
 # Machine.max_rpm -- Used in speeds and feeds calculations.
@@ -198,7 +217,7 @@ class Machine:
 
     @max_rpm.setter
     def max_rpm(self, value):
-        print(f";{YELLOW} Setting {self.name} max Spindle RPM: {value}{ENDC}")
+        self.queue(comment=f"Setting {self.name} max Spindle RPM: {value}", style='machine')
         self._max_rpm = value
 
 ################################################################################
@@ -211,7 +230,7 @@ class Machine:
 
     @max_feed.setter
     def max_feed(self, value):
-        print(f";{YELLOW} Setting {self.name} max Feed: {value}mm/min{ENDC}")
+        self.queue(comment=f"Setting {self.name} max Feed: {value} mm/min", style='machine')
         self._max_feed = value
 
 ################################################################################
@@ -228,7 +247,7 @@ class Machine:
     @feed.setter
     def feed(self, feed):
         self._feed = feed
-        print(f";{YELLOW} Using Machine Feed: {self.feed:.4f} mm/min | {self.feed/25.4:.4f} in/min | {self.feed/25.4/12:.4f} ft/min{ENDC}")
+        self.queue(comment=f"Using Feed: {self.feed:.4f} mm/min | {self.feed/25.4:.4f} in/min | {self.feed/25.4/12:.4f} ft/min", style='machine')
 
 ################################################################################
 # Absolute & Incremental Movement Modes
@@ -246,9 +265,9 @@ class Machine:
         self._absolute = bool(value)
         if self._absolute != old_value:
             if self._absolute:
-                print(f"G90 ;{GREEN} Absolute mode{ENDC}")
+                self.queue(code='G90', comment='Absolute mode')
             else:
-                print(f"G91 ;{GREEN} Incremental mode{ENDC}")
+                self.queue(code='G91', comment='Incremental mode')
 
     @property
     def incremental(self):
@@ -278,8 +297,6 @@ class Machine:
             raise ValueError(f"{RED}Machine.move requires at least one coordinate to move to{ENDC}")
         self.absolute = absolute
         if self.absolute and self._optimize:
-#            print(self._optimize_tool)
-#            print([[self._x, self._y, self._z],[x,y,z]])
             old_pos = [None, None, None]
             new_pos = [None, None, None]
 
@@ -302,21 +319,13 @@ class Machine:
         elif self._optimize:
             raise NotImplementedError(f"{RED}Optimizing relative moves is not yet implemented")
         else:
-            G = 'G53 G' if machine_coord else 'G'
-            print(f"{G}1" if li else f"{G}0", end='')
-            if x is not None:
-                print(f" X{x:.4f}", end='')
-                self._x = x
-            if y is not None:
-                print(f" Y{y:.4f}", end='')
-                self._y = y
-            if z is not None:
-                print(f" Z{z:.4f}", end='')
-                self._z = z
-            if e is not None:
-                print(f" E{e:.4f}", end='')
-            print(f" F{self.feed if li else self.max_feed:.4f}", end='')
-            print(f" ;{GREEN} {comment}{ENDC}" if comment else '')
+            code = 'G53 G' if machine_coord else 'G'
+            code += '1' if li else '0'
+            if x is not None: self._x = x
+            if y is not None: self._y = y
+            if z is not None: self._z = z
+            f = self.feed if li else self.max_feed
+            self.queue(code=code, x=x, y=y, z=z, e=e, f=f, comment=comment)
 
     rapid = move
 
@@ -339,10 +348,10 @@ class Machine:
 # Machine.bolt_circle() -- Make a Bolt Circle
 ################################################################################
 
-    def bolt_circle(self, c_x, c_y, n, r, depth=0):
-        print(f";{CYAN} Bolt Circle | n:{n}, c:{[c_x,c_y]}, r:{r}, depth:{depth}{ENDC}")
+    def bolt_circle(self, c_x, c_y, n, r, depth=0, theta=0):
+        self.queue(comment=f"Bolt Circle | n:{n}, c:{[c_x,c_y]}, r:{r}, depth:{depth}", style='feature')
         self.rapid(z=10, comment="Rapid to Safe Z")
-        theta = 0
+        theta = math.radians(theta)
         delta_theta = 2*math.pi/n
         for i in range(n):
             x = c_x + (r * math.cos(theta))
@@ -351,18 +360,18 @@ class Machine:
             self.cut(z=depth, comment=f"Drill {i+1}")
             self.rapid(z=10, comment="Retract")
             theta += delta_theta
-        print(f";{CYAN} Bolt Circle | END{ENDC}")
+        self.queue(comment='Bolt Circle | END', style='feature')
 
 ################################################################################
 # Mill Drill - Helix-drill a hole up to 2x the diameter of the end mill used
 ################################################################################
 
     def mill_drill(self, c_x, c_y, diameter, depth, z_step=0.1, outside=False, retract=True):
-        print(f";{CYAN} Mill Drill | center: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, diameter: {diameter:.4f}, depth: {depth}, z_step: {z_step:.4f}{ENDC}")
+        self.queue(comment=f"Mill Drill | center: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, diameter: {diameter:.4f}, depth: {depth}, z_step: {z_step:.4f}", style='feature')
         if diameter > 2 * self.tool.diameter:
             raise ValueError(f"{RED}Tool {self.tool.number} ({self.tool.diameter:.4f} mm) is less than half as wide as the hole ({diameter} mm).  Use a larger endmill or make a pocket instead of mill-drilling.")
         self.helix(c_x, c_y, diameter, depth, z_step, outside, retract)
-        print(f";{CYAN} Mill Drill | END{ENDC}")
+        self.queue(comment='Mill Drill | END', style='feature')
 
 ################################################################################
 # Helix - Helix-mill a circle with the cutter on either the inside (default)
@@ -372,7 +381,7 @@ class Machine:
     def helix(self, c_x, c_y, diameter, depth, z_step=0.1, outside=False, retract=True):
         if self._optimize:
             raise ValueError(f"{RED}The _optimize option currently does not work with helix operations")
-        print(f";{CYAN} Helix | center: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, diameter: {diameter:.4f}, depth: {depth}, z_step: {z_step:.4f}{ENDC}")
+        self.queue(comment=f"Helix | center: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, diameter: {diameter:.4f}, depth: {depth}, z_step: {z_step:.4f}", style='feature')
         if diameter < self.tool.diameter:
             raise ValueError(f"{RED}Tool {self.tool.number} is too big ({self.tool.diameter:.4f} mm) to make this small ({diameter} mm) of a hole{ENDC}")
         if depth > self.tool.length:
@@ -385,13 +394,13 @@ class Machine:
         self.rapid(z=self.safe_z, comment="Rapid to Safe Z")
         self.rapid(c_x+diameter/2-self.tool.diameter/2, c_y, comment="Rapid to pocket offset")
         self.rapid(z=0.1, comment="Rapid to workpiece surface")
-        print(f"G17;{GREEN} Helix in XY-plane{ENDC}")
-        print(f"G2 Z{-depth} I{self.tool.diameter/2-diameter/2:.4f} J0 P{int(depth/z_step)} F{self.feed};{GREEN} Heli-drill{ENDC}")
-        print(f"G2 I{self.tool.diameter/2-diameter/2:.4f} J0 P1 F{self.feed};{GREEN} Clean the bottom{ENDC}")
+        self.queue(code='G17', comment='Helix in XY-plane')
+        self.queue(code='G2', z=-depth, i=self.tool.diameter/2-diameter/2, j=0, p=int(depth/z_step), f=self.feed, comment='Heli-drill')
+        self.queue(code='G2', i=self.tool.diameter/2-diameter/2, j=0, p=1, f=self.feed, comment="Clean the bottom")
         if retract:
             self.rapid(z=self.safe_z, comment="Retract")
             self.rapid(c_x, c_y, comment="Re-Center")
-        print(f";{CYAN} Helix | END{ENDC}")
+        self.queue(comment='Helix | END', style='feature')
 
     circle = helix
 
@@ -400,7 +409,7 @@ class Machine:
 ################################################################################
 
     def circular_pocket(self, c_x, c_y, diameter, depth, step=None, finish=0.1, retract=True):
-        print(f";{CYAN} Circular Pocket | center: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, diameter: {diameter:.4f}, depth: {depth}, step: {step}, finish: {finish}{ENDC}")
+        self.queue(comment=f"Circular Pocket | center: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, diameter: {diameter:.4f}, depth: {depth}, step: {step}, finish: {finish}", style='feature')
         if self._optimize:
             raise ValueError(f"{RED}The _optimize option currently does not work with circular operations")
         if step is None: step = self.tool.diameter/10
@@ -414,49 +423,48 @@ class Machine:
         for i in range(1, int((diameter/2-drill_diameter/2)/step)+1):
             if i%2:
                 # Right to Left
-                print(f"G2 I{center-i*step+step/2:.4f} X{c_x-drill_diameter/2+self.tool.diameter/2-i*step:.4f} F{self.feed}{'; '+GREEN+'Spiral out'+ENDC if i==1 else ''}")
+                self.queue(code='G2', i=center-i*step+step/2, x=c_x-drill_diameter/2+self.tool.diameter/2-i*step, f=self.feed, comment='Spiral out' if i==1 else '')
             else:
                 # Left to Right
-                print(f"G2 I{i*step-step/2-center:.4f} X{c_x+drill_diameter/2-self.tool.diameter/2+i*step:.4f} F{self.feed}")
+                self.queue(code='G2', i=i*step-step/2-center, x=c_x+drill_diameter/2-self.tool.diameter/2+i*step, f=self.feed)
         if i%2:
             # Left to Right
             x2 = c_x+diameter/2-self.tool.diameter/2
             x1 = c_x+drill_diameter/2-self.tool.diameter/2+(i-1)*step
-            print(f"G2 I{i*step-step/2-center+(x2-x1)/2:.4f} X{x2} F{self.feed}; {GREEN}Getting to final dimension{ENDC}")
-            print(f"G2 I{self.tool.diameter/2-diameter/2} F{self.feed}; {GREEN}Final pass{ENDC}")
+            self.queue(code='G2', i=i*step-step/2-center+(x2-x1)/2, x=x2, f=self.feed, comment='Getting to final dimension')
+            self.queue(code='G2', i=self.tool.diameter/2-diameter/2, f=self.feed, comment='Final pass')
         else:
             # Right to Left
             x2 = c_x-diameter/2+self.tool.diameter/2
             x1 = c_x-drill_diameter/2+self.tool.diameter/2-(i-1)*step
-            print(f"G2 I{center-i*step+step/2+(x2-x1)/2:.4f} X{x2} F{self.feed}; {GREEN}Getting to final dimension{ENDC}")
-            print(f"G2 I{diameter/2-self.tool.diameter/2} F{self.feed}; {GREEN}Final pass{ENDC}")
+            self.queue(code='G2', i=center-i*step+step/2+(x2-x1)/2, x=x2, f=self.feed, comment='Getting to final dimension')
+            self.queue(code='G2', i=diameter/2-self.tool.diameter/2, f=self.feed, comment='Final pass')
         if retract:
             self.rapid(c_x, c_y, self.safe_z, comment="Retract")
-        print(f";{CYAN} Circular Pocket | END{ENDC}")
+        self.queue(comment='Circular Pocket | END', style='feature')
 
 ################################################################################
 # Machine.pocket_circle() -- Like a Bolt Circle, but with Circular Pockets
 ################################################################################
 
-    def pocket_circle(self, c_x, c_y, n, r, depth, diameter, step=None, finish=0.1):
-        print(f";{CYAN} Pocket Circle | n:{n}, c:{[c_x,c_y]}, r:{r}, depth:{depth}, diameter:{diameter}, step:{step}, finish:{finish}{ENDC}")
+    def pocket_circle(self, c_x, c_y, n, r, depth, diameter, theta=0, step=None, finish=0.1):
+        self.queue(comment=f"Pocket Circle | n:{n}, c:{[c_x,c_y]}, r:{r}, depth:{depth}, diameter:{diameter}, step:{step}, finish:{finish}", style='feature')
         self.rapid(z=10, comment="Rapid to Safe Z")
-        theta = 0
+        theta = math.radians(theta)
         delta_theta = 2*math.pi/n
         for i in range(n):
             x = c_x + (r * math.cos(theta))
             y = c_y + (r * math.sin(theta))
             self.circular_pocket(x, y, diameter, depth, step, finish)
             theta += delta_theta
-        print(f";{CYAN} Pocket Circle | END{ENDC}")
+        self.queue(comment='Pocket Circle | END', style='feature')
 
 ################################################################################
 # Rectangular Frame
 ################################################################################
 
-    def frame(self, c_x, c_y, x, y, z_top=0, z_bottom=0, z_step=None, inside=False, retract=True, c='center', r=None, r_steps=10, feature=None):
-        if feature: print(f";{ORANGE} {feature}{ENDC}")
-        print(f";{CYAN} Rectangular Frame | [c_x,c_y]: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, x: {x:.4f}, y: {y:.4f}, z_top: {z_top}, z_bottom: {z_bottom}, z_step: {z_step}, inside: {inside}, c: {c}, r: {r}{ENDC}")
+    def frame(self, c_x, c_y, x, y, z_top=0, z_bottom=0, z_step=None, inside=False, retract=True, c='center', r=None, r_steps=10):
+        self.queue(comment=f"Rectangular Frame | [c_x,c_y]: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, x: {x:.4f}, y: {y:.4f}, z_top: {z_top}, z_bottom: {z_bottom}, z_step: {z_step}, inside: {inside}, c: {c}, r: {r}", style='feature')
 
         if r is None:
             r = self.tool.radius if inside else 0
@@ -512,7 +520,7 @@ class Machine:
             turtle.circle(radius=r+tool_r, extent=90, steps=r_steps)
 
         self.retract()
-        print(f";{CYAN} End Rectangular Frame{ENDC}")
+        self.queue(comment='Rectangular Frame | END', style='feature')
 
     rectangle = frame
 
@@ -520,9 +528,8 @@ class Machine:
 # Rectangular Pocket
 ################################################################################
 
-    def rectangular_pocket(self, c_x, c_y, x, y, z_top=0, z_bottom=0, step=None, z_step=None, finish=0, undercut=False, retract=True, feature=None):
-        if feature: print(f";{ORANGE} {feature}{ENDC}")
-        print(f";{CYAN} Turtle Pocket | center: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, x: {x:.4f}, y: {y:.4f}, z_top: {z_top}, z_bottom: {z_bottom}, step: {step}, z_step: {z_step}, finish: {finish}, undercut: {undercut}, retract: {retract}{ENDC}")
+    def rectangular_pocket(self, c_x, c_y, x, y, z_top=0, z_bottom=0, step=None, z_step=None, finish=0, undercut=False, retract=True):
+        self.queue(comment=f"Turtle Pocket | center: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, x: {x:.4f}, y: {y:.4f}, z_top: {z_top}, z_bottom: {z_bottom}, step: {step}, z_step: {z_step}, finish: {finish}, undercut: {undercut}, retract: {retract}", style='feature')
         if not self.tool:
             raise ValueError(f"{RED}You can't cut a pocket without selecting a tool first")
         if self.tool.diameter > x or self.tool.diameter > y:
@@ -561,7 +568,7 @@ class Machine:
             step = (x-ramp_x-self.tool.diameter)/passes
             self.retract(comment="Retract")
 
-            turtle = self.turtle()
+            turtle = self.turtle(verbose=True)
             turtle._isdown = True
             turtle.goto(c_x-ramp_x/2, c_y+ramp_y/2, z_top)
             # Spiral Down
@@ -619,13 +626,15 @@ class Machine:
             turtle.circle(-2*d, steps=10, extent=10)
         if retract:
             self.retract(c_x, c_y)
+        self.queue(comment='Turtle Pocket | END', style='feature')
+
 
 ################################################################################
 # Legacy Pocket
 ################################################################################
 
     def legacy_pocket(self, c_x, c_y, x, y, depth, step=None, finish=0.1, undercut=False, retract=True):
-        print(f";{CYAN} Rectangular Pocket | center: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, x: {x:.4f}, y: {y:.4f}, depth: {depth}, step: {step}, finish: {finish}, undercut: {undercut}{ENDC}")
+        self.queue(comment=f"Legacy Rectangular Pocket | center: {['{:.4f}'.format(c_x), '{:.4f}'.format(c_y)]}, x: {x:.4f}, y: {y:.4f}, depth: {depth}, step: {step}, finish: {finish}, undercut: {undercut}", style='feature')
         if not self.tool:
             raise ValueError(f"{RED}You can't cut a pocket without selecting a tool first")
         if depth > self.tool.flute_length:
@@ -697,7 +706,7 @@ class Machine:
         if retract:
             self.rapid(c_x, c_y, self.safe_z, comment="Retract")
 
-        print(f";{CYAN} Rectangular Pocket | END{ENDC}")
+        self.queue(comment='Legacy Rectangular Pocke | END', style='feature')
 
 ################################################################################
 # Turtle Object Reference
@@ -711,17 +720,59 @@ class Machine:
 ################################################################################
 
     def save_modal_state(self):
-        print(f"M70 ;{GREEN} Save Modal State")
+        self.queue(code='M70', comment='Save Modal State')
 
     def invalidate_modal_state(self):
-        print(f"M71 ;{GREEN} Invalidate Modal State")
+        self.queue(code='M71', comment='Invalidate Modal State')
 
     def restore_modal_state(self):
-        print(f"M72 ;{GREEN} Restore Modal State")
+        self.queue(code='M72', comment='Restore Modal State')
 
 ################################################################################
 # Modal State -- M70, M71, M72
 ################################################################################
 
     def pause(self, msg="Paused, Click Done to resume"):
-        print(f"M0 (MSG, {msg})")
+        self.queue(code=f"M0 (MSG, {msg})")
+
+################################################################################
+# Print to stdout
+################################################################################
+
+    def print(self):
+        styles = {
+            '': GREEN,
+            'warning': RED,
+            'machine': YELLOW,
+            'feature': CYAN,
+            'tool': BROWN,
+            'turtle': PURPLE,
+            'fdm_printer': ORANGE,
+            'plotter': ORANGE,
+            'lathe': ORANGE,
+            'mill': ORANGE
+        }
+        for command in self.command_queue:
+            if command.get('code',None) is not None:    # Code
+                print(f"{command.get('code','')}", end='')
+            if command.get('x',None) is not None:       # X-coordinate
+                print(f" X{command['x']:.4f}", end='')
+            if command.get('y',None) is not None:       # Y-coordinate
+                print(f" Y{command['y']:.4f}", end='')
+            if command.get('z',None) is not None:       # Z-coordinate
+                print(f" Z{command['z']:.4f}", end='')
+            if command.get('e',None) is not None:       # Extruder Position
+                print(f" E{command['e']:.4f}", end='')
+            if command.get('i',None) is not None:       # Arc Center X-offset
+                print(f" I{command['i']:.4f}", end='')
+            if command.get('j',None) is not None:       # Arc Center Y-offset
+                print(f" J{command['j']:.4f}", end='')
+            if command.get('p',None) is not None:       # Number of helix turns
+                print(f" P{command['p']}", end='')
+            if command.get('f',None) is not None:       # Feed Rate
+                print(f" F{command['f']:.4f}", end='')
+            if command.get('s',None) is not None:       # Spindle RPM, Bed/Hotend Temperature
+                print(f" S{command['s']:.4f}", end='')
+            if command.get('comment',None) is not None: # Human-readable comments
+                print(f"; {styles[command.get('style', '')]}{command.get('comment', '')}{ENDC}", end='')
+            print()

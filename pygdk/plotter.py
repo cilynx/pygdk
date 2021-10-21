@@ -16,7 +16,7 @@ ENDC   = '\033[0m'
 class Plotter(Machine):
     def __init__(self, json_file, safe_z=10):
         super().__init__(json_file)
-        print(f";{YELLOW} Loading Plotter parameters from JSON{ENDC}")
+        self.queue(comment='Loading Plotter parameters from JSON', style='plotter')
         with open(f"machines/{json_file}") as f:
             dict = json.load(f)
             if 'Plotter' not in dict:
@@ -44,7 +44,6 @@ class Plotter(Machine):
 
         if self._optimize:
             if value is None:
-#                print(json.dumps(self._linear_moves, indent=4))
                 self._optimize = False
                 for color in self._linear_moves:
                     if color:

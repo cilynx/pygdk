@@ -21,8 +21,9 @@ class Tool:
             self._description = dict.get('description', None)
             self._flute_length = dict.get('flute_length', None)
             self._number = i
+            self.machine = machine
             diameter = self._diameter * (25.4 if self._units == 'imperial' else 1)
-            print(f";{YELLOW} Looking up Tool {i} in Tool Table: [{self._description}] | {diameter:.4f} mm{ENDC}")
+            machine.queue(comment=f"Looking up Tool {i} in Tool Table: [{self._description}] | {diameter:.4f} mm", style='tool')
 
 ################################################################################
 # Tool.number -- Tool Table Index
@@ -50,7 +51,7 @@ class Tool:
     @diameter.setter
     def diameter(self, value):
         self._diameter = value
-        print(f";{YELLOW} Setting Tool Diameter: {self.diameter} mm | {self.diameter/25.4}\"{ENDC}")
+        self.machine.queue(comment=f"Setting Tool Diameter: {self.diameter} mm | {self.diameter/25.4}\"", style='tool')
 
     @property
     def radius(self):
@@ -70,7 +71,7 @@ class Tool:
     @shank.setter
     def shank(self, value):
         self._shank = value
-        print(f";{YELLOW} Setting Tool Shank: {self.shank} mm | {self.shank/25.4}\"{ENDC}")
+        self.machine.queue(comment=f"Setting Tool Shank: {self.shank} mm | {self.shank/25.4}\"", style='tool')
 
 ################################################################################
 # Tool Length
@@ -86,7 +87,7 @@ class Tool:
     @length.setter
     def length(self, value):
         self._length = value
-        print(f";{YELLOW} Setting Tool Length: {self.length} mm | {self.length/25.4}\"{ENDC}")
+        self.machine.queue(comment=f"Setting Tool Length: {self.length} mm | {self.length/25.4}\"", style='tool')
 
     @property
     def flute_length(self):
@@ -96,7 +97,7 @@ class Tool:
     @flute_length.setter
     def flute_length(self, value):
         self._flute_length = value
-        print(f";{YELLOW} Setting Tool Flute Length: {self.flute_length} mm | {self.flute_length/25.4}\"{ENDC}")
+        self.machine.queue(comment=f"Setting Tool Flute Length: {self.flute_length} mm | {self.flute_length/25.4}\"", style='tool')
 
     @property
     def max_depth(self):

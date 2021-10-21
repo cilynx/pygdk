@@ -24,11 +24,11 @@ class Turtle:
         self._y = y
         self._z = z
         self._z_draw = z_draw
-        print(f";{CYAN} Turtle | [x,y,z]: {[x,y,z]}{ENDC}") if self._verbose else None
+        if verbose: machine.queue(comment=f"Turtle | [x,y,z]: {[x,y,z]}", style='turtle')
 #        machine.retract()
 
     def __del__(self):
-        print(f";{CYAN} End Turtle{ENDC}")
+        self._machine.queue(comment='Turtle | END', style='turtle')
 
 ################################################################################
 # Turtle.forward(distance)
@@ -49,7 +49,7 @@ class Turtle:
         else: # 3D motion
             z = self._z + distance * self.heading()[2]
         if self._verbose and comment is None:
-            comment = f"Moving at {self.heading()}-deg from ({self._x:.4f}, {self._y:.4f}, {self._z:.4f}) to ({x:.4f}, {y:.4f}, {z:.4f})"
+            comment = f"Moving at {[round(i,4) for i in self.heading()]} from ({self._x:.4f}, {self._y:.4f}, {self._z:.4f}) to ({x:.4f}, {y:.4f}, {z:.4f})"
         self.goto(x, y, z, e, comment=comment)
 
     fd = forward
@@ -258,9 +258,9 @@ class Turtle:
 ################################################################################
 
     def speed(self, speed=None):
-        print(f";{RED} Turtle.speed() is deliberately not implemented.{ENDC}")
-        print(f";{RED} You want to set your feeds and speeds outside of the Turtle framework.{ENDC}")
-        print(f";{RED} Turtle shouldn't care what you're cutting or drawing on or with.{ENDC}")
+        self.queue(comment="Turtle.speed() is deliberately not implemented.", style='warning')
+        self.queue(comment="You want to set your feeds and speeds outside of the Turtle framework.", style='warning')
+        self.queue(comment="Turtle shouldn't care what you're cutting or drawing on or with.", style='warning')
 
 ################################################################################
 # Turtle.position()
@@ -439,7 +439,7 @@ class Squirtle(Turtle):
         self._isdown = True
 
     def pencolor(self):
-        print(f";{RED} Pen colors are disabled for Squirtle.  Maybe someday I'll play with multiple extruders.{ENDC}")
+        self.queue(comment="Pen colors are disabled for Squirtle.  Maybe someday I'll play with multiple extruders.", style='warning')
 
     def forward(self, distance, dz=0, comment=None):
         if self.extrude:

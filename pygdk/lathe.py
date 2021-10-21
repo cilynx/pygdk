@@ -16,7 +16,7 @@ ENDC   = '\033[0m'
 class Lathe(Machine):
     def __init__(self, json_file):
         super().__init__(json_file)
-        print(f";{YELLOW} Loading Lathe parameters from JSON{ENDC}")
+        self.queue(comment='Loading Lathe parameters from JSON', style='lathe')
         with open(f"machines/{json_file}") as f:
             dict = json.load(f)
             if 'Tool Table' not in dict:
