@@ -50,7 +50,7 @@ class Plotter(Machine):
                         self.pen_color = color
                         for move in self._linear_moves[color]:
                             self.rapid(move[0][0], move[0][1], move[0][2], comment="Rapid to next start")
-                            self.cut(move[1][0], move[1][1], move[1][2], comment="Execute move")
+                            self.linear_interpolation(move[1][0], move[1][1], move[1][2], comment="Execute move")
             elif any(value in row for row in self._plotter['Magazine']):
                 self._linear_moves.setdefault(value,[])
                 self._optimize_tool = value

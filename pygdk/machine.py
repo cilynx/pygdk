@@ -360,7 +360,7 @@ class Machine:
             x = c_x + (r * math.cos(theta))
             y = c_y + (r * math.sin(theta))
             self.rapid(x, y, comment=f"Rapid to {i+1}")
-            self.cut(z=depth, comment=f"Drill {i+1}")
+            self.linear_interpolation(z=depth, comment=f"Drill {i+1}")
             self.rapid(z=10, comment="Retract")
             theta += delta_theta
         self.queue(comment='Bolt Circle | END', style='feature')
@@ -666,21 +666,21 @@ class Machine:
         assert spiral_step <= step
         self.retract(comment="Retract")
         for i in range(0,int(ramp_passes/4)):
-            self.cut(c_x-ramp_x/2, c_y+ramp_y/2, -(4*i+0)*ramp_step, comment = f"Ramp pass {i+1}")
-            self.cut(c_x+ramp_x/2, c_y+ramp_y/2, -(4*i+1)*ramp_step)
-            self.cut(c_x+ramp_x/2, c_y-ramp_y/2, -(4*i+2)*ramp_step)
-            self.cut(c_x-ramp_x/2, c_y-ramp_y/2, -(4*i+3)*ramp_step)
-        self.cut(c_x-ramp_x/2, c_y+ramp_y/2, -rough_depth, comment = f"Ramp pass {i+2}")
-        self.cut(c_x+ramp_x/2, c_y+ramp_y/2, -rough_depth)
-        self.cut(c_x+ramp_x/2, c_y-ramp_y/2, -rough_depth)
-        self.cut(c_x-ramp_x/2, c_y-ramp_y/2, -rough_depth)
-        self.cut(c_x-ramp_x/2, c_y+ramp_y/2, -rough_depth)
+            self.linear_interpolation(c_x-ramp_x/2, c_y+ramp_y/2, -(4*i+0)*ramp_step, comment = f"Ramp pass {i+1}")
+            self.linear_interpolation(c_x+ramp_x/2, c_y+ramp_y/2, -(4*i+1)*ramp_step)
+            self.linear_interpolation(c_x+ramp_x/2, c_y-ramp_y/2, -(4*i+2)*ramp_step)
+            self.linear_interpolation(c_x-ramp_x/2, c_y-ramp_y/2, -(4*i+3)*ramp_step)
+        self.linear_interpolation(c_x-ramp_x/2, c_y+ramp_y/2, -rough_depth, comment = f"Ramp pass {i+2}")
+        self.linear_interpolation(c_x+ramp_x/2, c_y+ramp_y/2, -rough_depth)
+        self.linear_interpolation(c_x+ramp_x/2, c_y-ramp_y/2, -rough_depth)
+        self.linear_interpolation(c_x-ramp_x/2, c_y-ramp_y/2, -rough_depth)
+        self.linear_interpolation(c_x-ramp_x/2, c_y+ramp_y/2, -rough_depth)
         # Spiral out to dimension-finish
         for i in range(0,int(spiral_passes/2)):
-            self.cut(c_x-ramp_x/2-i*spiral_step, c_y+ramp_y/2+i*spiral_step, comment=f"Spiral pass {i+1}")
-            self.cut(c_x+ramp_x/2+i*spiral_step, c_y+ramp_y/2+i*spiral_step)
-            self.cut(c_x+ramp_x/2+i*spiral_step, c_y-ramp_y/2-i*spiral_step)
-            self.cut(c_x-ramp_x/2-(i+1)*spiral_step, c_y-ramp_y/2-i*spiral_step)
+            self.linear_interpolation(c_x-ramp_x/2-i*spiral_step, c_y+ramp_y/2+i*spiral_step, comment=f"Spiral pass {i+1}")
+            self.linear_interpolation(c_x+ramp_x/2+i*spiral_step, c_y+ramp_y/2+i*spiral_step)
+            self.linear_interpolation(c_x+ramp_x/2+i*spiral_step, c_y-ramp_y/2-i*spiral_step)
+            self.linear_interpolation(c_x-ramp_x/2-(i+1)*spiral_step, c_y-ramp_y/2-i*spiral_step)
 
         # On final pass, ramp to final dimension (x,y,z) in one corner, then finish all four sides.
         # Add undercuts on each corner if needed
@@ -689,23 +689,23 @@ class Machine:
         s = 1/2*(h-d)
         corner = math.sqrt((s**2)/2)
 
-        self.cut(c_x-x/2+d/2, c_y+y/2-d/2, comment="Finishing pass")
-        self.cut(c_x+x/2-d/2, c_y+y/2-d/2)
+        self.linear_interpolation(c_x-x/2+d/2, c_y+y/2-d/2, comment="Finishing pass")
+        self.linear_interpolation(c_x+x/2-d/2, c_y+y/2-d/2)
         if undercut:
-            self.cut(c_x+x/2-d/2+corner, c_y+y/2-d/2+corner, comment="Top Left Undercut")
-            self.cut(c_x+x/2-d/2, c_y+y/2-d/2)
-        self.cut(c_x+x/2-d/2, c_y-y/2+d/2)
+            self.linear_interpolation(c_x+x/2-d/2+corner, c_y+y/2-d/2+corner, comment="Top Left Undercut")
+            self.linear_interpolation(c_x+x/2-d/2, c_y+y/2-d/2)
+        self.linear_interpolation(c_x+x/2-d/2, c_y-y/2+d/2)
         if undercut:
-            self.cut(c_x+x/2-d/2+corner, c_y-y/2+d/2-corner, comment="Top Right Undercut")
-            self.cut(c_x+x/2-d/2, c_y-y/2+d/2)
-        self.cut(c_x-x/2+d/2, c_y-y/2+d/2)
+            self.linear_interpolation(c_x+x/2-d/2+corner, c_y-y/2+d/2-corner, comment="Top Right Undercut")
+            self.linear_interpolation(c_x+x/2-d/2, c_y-y/2+d/2)
+        self.linear_interpolation(c_x-x/2+d/2, c_y-y/2+d/2)
         if undercut:
-            self.cut(c_x-x/2+d/2-corner, c_y-y/2+d/2-corner, comment="Bottom Right Undercut")
-            self.cut(c_x-x/2+d/2, c_y-y/2+d/2)
-        self.cut(c_x-x/2+d/2, c_y+y/2-d/2)
+            self.linear_interpolation(c_x-x/2+d/2-corner, c_y-y/2+d/2-corner, comment="Bottom Right Undercut")
+            self.linear_interpolation(c_x-x/2+d/2, c_y-y/2+d/2)
+        self.linear_interpolation(c_x-x/2+d/2, c_y+y/2-d/2)
         if undercut:
-            self.cut(c_x-x/2+d/2-corner, c_y+y/2-d/2+corner, comment="Bottom Left Undercut")
-            self.cut(c_x-x/2+d/2, c_y+y/2-d/2)
+            self.linear_interpolation(c_x-x/2+d/2-corner, c_y+y/2-d/2+corner, comment="Bottom Left Undercut")
+            self.linear_interpolation(c_x-x/2+d/2, c_y+y/2-d/2)
         if retract:
             self.rapid(c_x, c_y, self.safe_z, comment="Retract")
 
