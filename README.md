@@ -31,7 +31,8 @@ onefinity.tool = '1/4" Downcut'
 onefinity.helix(c_x=0, c_y=0, diameter=67, depth=21, z_step=10)
 onefinity.helix(c_x=0, c_y=0, diameter=77, depth=21, z_step=10, outside=True)
 
-onefinity.print_gcode()
+onefinity.print_gcode() # Dump gcode to stdout
+onefinity.OctoPrint()   # Send gcode to OctoPrint
 ```
 This design assumes your stock is 21mm thick and that you'll be zeroing Z on the surface.  
 
@@ -50,7 +51,9 @@ The first time you run CAMotics, you'll need to setup your tool table by right-c
 
 ## Execute
 
-Once you're happy that the simulation doesn't show anything bad happening, you can copy the gcode to your machine however you would normally do it.  This might be via the machine's native web interface, a USB stick, OctoPrint, or you can even push gcode to BuildBotics controllers from inside CAMotics.
+If you use OctoPrint, you can set `OctoPrint Server` and `OctoPrint API Key` in your [machine configuration](machines/kossel.json) to enable sending your generated gcode directly to OctoPrint by calling the `machine.OctoPrint()` helper at the end of your script.
+
+If not, you can copy the gcode to your machine however you would normally do it.  This might be via the machine's native web interface, a USB stick, or you can even push gcode to BuildBotics controllers from inside CAMotics.
 
 Take a deep breath, remember that you are personally responsible for everything good or bad that your machine does, then let it rip.
 
@@ -64,11 +67,6 @@ Take a deep breath, remember that you are personally responsible for everything 
 from pygdk import Machine
 
 machine = Machine('onefinity.json')
-
-# Do stuff
-
-machine.print_gcode() # Dump generated gcode to stdout
-machine.save_gcode() # Save generated gcode to a file
 ```
 
 To get started, import the `Machine` class and create your primary `Machine` object that you'll use to do pretty much everything else.  Check out [onefinity.json](machines/onefinity.json) for a fleshed out configuration and [rf30.json](machines/rf30.json) for a minimal example.

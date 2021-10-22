@@ -46,3 +46,6 @@ square()
 
 squirtle.goto(30,30,0.2)
 square()
+
+kossel.print_gcode()
+kossel.octoprint()

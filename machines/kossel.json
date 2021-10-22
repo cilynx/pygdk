@@ -1,5 +1,7 @@
 {
    "Name": "Kossel",
+   "OctoPrint Server": "",
+   "OctoPrint API Key": "",
    "Max Feed Rate (mm/min)": 5000,
    "Nozzle Diameter": 0.4,
    "Retraction": 8,

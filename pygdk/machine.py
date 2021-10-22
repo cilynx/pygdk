@@ -39,6 +39,8 @@ class Machine:
                     raise ValueError(f"{RED}All machines must have '{req}' defined in their JSON config.  See https://github.com/cilynx/pygdk/tree/main/machines for example configurations.")
             self.name = dict['Name']
             self.command_queue = [{'comment': f"Initializing Machine {self.name}", 'style': 'machine'}]
+            self.octoprint_api_key = dict.get('OctoPrint API Key', None)
+            self.octoprint_server = dict.get('OctoPrint Server', None)
             self.max_feed = dict['Max Feed Rate (mm/min)']
             self._x_offset = 0
             self._y_offset = 0
@@ -741,7 +743,8 @@ class Machine:
 ################################################################################
 
     def generate_gcode(self):
-        self.gcode = []
+        self.gcode_array = []
+        self.gcode = ''
         styles = {
             '': GREEN,
             'warning': RED,
@@ -778,7 +781,8 @@ class Machine:
                 line += f" S{command['s']:.4f}"
             if command.get('comment',None) is not None: # Human-readable comments
                 line += f"; {styles[command.get('style', '')]}{command.get('comment', '')}{ENDC}"
-            self.gcode.append(line)
+            self.gcode_array.append(line)
+        self.gcode = "\n".join(self.gcode_array)
 
 ################################################################################
 # Print G-code to stdout
@@ -787,7 +791,7 @@ class Machine:
     def print_gcode(self):
         if not self.gcode:
             self.generate_gcode()
-        print("\n".join(self.gcode))
+        print(self.gcode)
 
 ################################################################################
 # Save G-code to File
@@ -797,4 +801,26 @@ class Machine:
         if not self.gcode:
             self.generate_gcode()
         with open(filename, 'w') as file:
-            file.write("\n".join(self.gcode))
+            file.write(self.gcode)
+
+################################################################################
+# OctoPrint Helper
+################################################################################
+
+    def octoprint(self, start_print=False, select=True):
+        print(f"{GREEN}Sending to OctoPrint{ENDC}")
+        if not self.octoprint_server or not self.octoprint_api_key:
+            raise ValueError("You must configure `OctoPrint Server` and `OctoPrint API Key` in your machine JSON before you can send to OctoPrint.  See https://github.com/cilynx/pygdk/tree/main/machines for configuration examples.")
+        if not self.gcode:
+            self.generate_gcode()
+        import os, requests
+        filename = os.path.basename(sys.argv[0])+'.g'
+        fle={'file': (filename, self.gcode)}
+        url=f"http://{self.octoprint_server}/api/files/local"
+        payload={'select': select, 'print': start_print }
+        header={'X-Api-Key': self.octoprint_api_key }
+        response = requests.post(url, files=fle,data=payload,headers=header)
+        print(response.__dict__)
+
+    OctoPrint = octoprint
+
