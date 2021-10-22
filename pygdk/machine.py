@@ -824,3 +824,13 @@ class Machine:
 
     OctoPrint = octoprint
 
+################################################################################
+# Camotics Helper
+################################################################################
+
+    def camotics(self, filename=sys.argv[0]+'.nc'):
+        import os
+        self.save_gcode(filename)
+        os.system(f"camotics {filename}")
+
+    CAMotics = camotics

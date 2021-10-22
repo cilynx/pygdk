@@ -32,6 +32,7 @@ onefinity.helix(c_x=0, c_y=0, diameter=67, depth=21, z_step=10)
 onefinity.helix(c_x=0, c_y=0, diameter=77, depth=21, z_step=10, outside=True)
 
 onefinity.print_gcode() # Dump gcode to stdout
+onefinity.CAMotics()    # Simulate gcode in CAMotics
 onefinity.OctoPrint()   # Send gcode to OctoPrint
 ```
 This design assumes your stock is 21mm thick and that you'll be zeroing Z on the surface.  
@@ -44,7 +45,8 @@ This step is technically optional, but it's good practice to simulate your gcode
 
 Personally, I'm a fan of [CAMotics](https://camotics.org/) as it integrates with and is made by the same folks as the open-source [buildbotics](https://buildbotics.com/) controller Onefinity uses.
 
-![simulate-terminal](https://user-images.githubusercontent.com/6083980/137239020-0cd2d64f-2b1b-4e1f-8036-32e0f41b7f32.png)
+UPDATE 10/21: There is now a CAMotics helper, so you don't have to save the file and call CAMotics yourself.  Just call `machine.CAMotics()` at the end of your script and `pygdk` will save your gcode to a file and bring it up in CAMotics for you.
+
 ![simulate-camotics](https://user-images.githubusercontent.com/6083980/137239030-15445d6b-7a24-4ac7-95e6-963395a0263d.png)
 
 The first time you run CAMotics, you'll need to setup your tool table by right-clicking in the blank Tool Table section and selecting `Load Tool Table`.  If you don't already have a tool table you want to use, you can load in [tools.json](tables/tools.json) -- `pygdk`'s default tool table has more information in it than CAMotics can leverage, but it is backwards compatible.
