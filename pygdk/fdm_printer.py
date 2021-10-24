@@ -19,7 +19,6 @@ class FDMPrinter(Machine):
         super().__init__(json_file)
         self.queue(comment='Loading FDMPrinter parameters from JSON', style='fdm_printer')
         with open(f"machines/{json_file}") as f:
-            self.dict = json.load(f)
             if 'Filament Table' not in self.dict:
                 raise KeyError(f"{RED}Your machine configuration must reference a filament table file.  See https://github.com/cilynx/pygdk/blob/main/kossel.json for an example FDMPrinter configuration and https://github.com/cilynx/pygdk/blob/main/filament.json for an example filament table.{ENDC}")
             with open(f"tables/{self.dict['Filament Table']}", 'r') as ft:

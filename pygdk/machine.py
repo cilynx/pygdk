@@ -33,15 +33,15 @@ class Machine:
         if not json_file:
             raise ValueError(f"{RED}All machines must be initialized with a JSON config.  See https://github.com/cilynx/pygdk#quickstart for a quick introduction.")
         with open(f"machines/{json_file}") as f:
-            dict = json.load(f)
+            self.dict = json.load(f)
             for req in ['Name', 'Max Feed Rate (mm/min)']:
-                if not dict.get(req, None):
+                if not self.dict.get(req, None):
                     raise ValueError(f"{RED}All machines must have '{req}' defined in their JSON config.  See https://github.com/cilynx/pygdk/tree/main/machines for example configurations.")
-            self.name = dict['Name']
+            self.name = self.dict['Name']
             self.command_queue = [{'comment': f"Initializing Machine {self.name}", 'style': 'machine'}]
-            self.octoprint_api_key = dict.get('OctoPrint API Key', None)
-            self.octoprint_server = dict.get('OctoPrint Server', None)
-            self.max_feed = dict['Max Feed Rate (mm/min)']
+            self.octoprint_api_key = self.dict.get('OctoPrint API Key', None)
+            self.octoprint_server = self.dict.get('OctoPrint Server', None)
+            self.max_feed = self.dict['Max Feed Rate (mm/min)']
             self._x_offset = 0
             self._y_offset = 0
             self._z_offset = 0
