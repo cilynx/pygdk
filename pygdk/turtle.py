@@ -148,13 +148,6 @@ class Turtle:
 ################################################################################
 
     def goto(self, x=None, y=None, z=None, e=None, comment=None):
-        if isinstance(x, list):
-            if y is None and z is None:
-                z = x[2]
-                y = x[1]
-                x = x[0]
-            else:
-                raise ValueError(f"{RED}If first parameter is a multi-dimensional coordinate, you cannot also specify y or z")
         if x is not None:
             self._x = x
         if y is not None:
