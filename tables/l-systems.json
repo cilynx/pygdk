@@ -1,11 +1,29 @@
 {
    "Binary Tree" : {
       "angle" : 45,
-      "axiom" : "A",
+      "axiom" : "F",
       "n" : 5,
       "rules" : {
-         "A" : "B[-A]+A",
-         "B" : "BB"
+         "F" : "G[-F]+F",
+         "G" : "GG"
+      }
+   },
+   "Hilbert Curve" : {
+      "angle" : 90,
+      "axiom" : "A",
+      "n" : 4,
+      "rules" : {
+         "A" : "-BF+AFA+FB-",
+         "B" : "+AF-BFB-FA+"
+      }
+   },
+   "Moore Curve" : {
+      "angle" : 90,
+      "axiom" : "LFL+F+LFL",
+      "n" : 3,
+      "rules" : {
+         "L" : "-RF+LFL+FR-",
+         "R" : "+LF-RFR-FL+"
       }
    },
    "Peano Curve" : {

@@ -409,7 +409,7 @@ class Turtle:
         print(seq)
         stack = []
         for command in seq:
-            if command in ['A','B','F','G']:
+            if command in ['F','G']:
                 if not self._isdown:
                     self.pendown()
                 self.forward(seg)
