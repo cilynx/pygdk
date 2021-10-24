@@ -743,6 +743,9 @@ class Machine:
 ################################################################################
 
     def generate_gcode(self):
+        if self.dict.get('End G-Code',None):
+            for line in self.dict.get('End G-Code'):
+                self.command_queue.append({'code':line[0], 'comment':line[1]})
         self.gcode_array = []
         self.gcode = ''
         styles = {
