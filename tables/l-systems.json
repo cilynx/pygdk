@@ -17,6 +17,14 @@
          "B" : "+AF-BFB-FA+"
       }
    },
+   "Koch Snowflake" : {
+      "angle" : 60,
+      "axiom" : "F--F--F",
+      "n" : 3,
+      "rules" : {
+         "F" : "F+F--F+F"
+      }
+   },
    "Moore Curve" : {
       "angle" : 90,
       "axiom" : "LFL+F+LFL",

@@ -386,7 +386,7 @@ class Turtle:
     def orientation(self, value):
         self.heading, self.normal = value
 
-    def lsystem(self, name=None, axiom=None, rules=None, n=None, seg=10, angle=None):
+    def lsystem(self, name=None, axiom=None, rules=None, n=None, seg=10, angle=None, arms=None):
         import json
         if name is not None:
             self._machine.queue(comment='Loading L-system from JSON', style='turtle')
@@ -399,6 +399,10 @@ class Turtle:
                 if rules is None: rules = system['rules']
                 if angle is None: angle = system['angle']
                 if n is None: n = system['n']
+
+        if arms is not None:
+            angle = 360/arms
+            axiom = '--'.join(['F' for F in range(arms)])
 
         if None in [axiom, rules, angle, n]:
             raise ValueError(f"{RED}L-systems must have axiom, rules, angle, and n defined.{ENDC}")
