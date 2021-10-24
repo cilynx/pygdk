@@ -17,9 +17,9 @@ class Turtle:
         self._machine = machine
         self._isdown = False
         self._mode = mode
-        self._heading = [1,0,0]
-        self._normal = [0,0,1]
-        self._right = [0,-1,0]
+        self.heading = [1,0,0]
+        self.normal = [0,0,1]
+        self.right_v = [0,-1,0]
         self._x = x
         self._y = y
         self._z = z
@@ -39,17 +39,17 @@ class Turtle:
 ################################################################################
 
     def forward(self, distance, dz=0, e=None, comment=None):
-        x = self._x + distance * self.heading()[0]
-        y = self._y + distance * self.heading()[1]
+        x = self._x + distance * self.heading[0]
+        y = self._y + distance * self.heading[1]
         if dz: # 2.5D motion
-            if self.heading()[2] == 0:
+            if self.heading[2] == 0:
                 z = self._z + dz
             else:
                 raise ValueError(f"{RED}You can only use 2.5D motion in the XY-plane")
         else: # 3D motion
-            z = self._z + distance * self.heading()[2]
+            z = self._z + distance * self.heading[2]
         if self._verbose and comment is None:
-            comment = f"Moving at {[round(i,4) for i in self.heading()]} from ({self._x:.4f}, {self._y:.4f}, {self._z:.4f}) to ({x:.4f}, {y:.4f}, {z:.4f})"
+            comment = f"Moving at {[round(i,4) for i in self.heading]} from ({self._x:.4f}, {self._y:.4f}, {self._z:.4f}) to ({x:.4f}, {y:.4f}, {z:.4f})"
         self.goto(x, y, z, e, comment=comment)
 
     fd = forward
@@ -105,8 +105,8 @@ class Turtle:
 
     def roll(self, angle):
         angle = math.radians(angle)
-        self._right = self.dot([self._right], self.rot(self._heading, angle))[0]
-        self._normal = self.dot([self._normal], self.rot(self._heading, angle))[0]
+        self.right_v = self.dot([self.right_v], self.rot(self.heading, angle))[0]
+        self.normal = self.dot([self.normal], self.rot(self.heading, angle))[0]
 
 ################################################################################
 # Turtle.pitch - Tilt up or down without changing the side vector
@@ -114,8 +114,8 @@ class Turtle:
 
     def pitch(self, angle):
         angle = -math.radians(angle)
-        self._heading = self.dot([self._heading], self.rot(self._right, angle))[0]
-        self._normal = self.dot([self._normal], self.rot(self._right, angle))[0]
+        self.heading = self.dot([self.heading], self.rot(self.right_v, angle))[0]
+        self.normal = self.dot([self.normal], self.rot(self.right_v, angle))[0]
 
 ################################################################################
 # Turtle.yaw - Rotate right or left as viewed from above without changing the
@@ -124,8 +124,8 @@ class Turtle:
 
     def yaw(self, angle):
         angle = math.radians(angle)
-        self._heading = self.dot([self._heading], self.rot(self._normal, angle))[0]
-        self._right = self.dot([self._right], self.rot(self._normal, angle))[0]
+        self.heading = self.dot([self.heading], self.rot(self.normal, angle))[0]
+        self.right_v = self.dot([self.right_v], self.rot(self.normal, angle))[0]
 
     right = yaw
     rt = yaw
@@ -180,25 +180,6 @@ class Turtle:
         self.goto(self._x, y)
 
 ################################################################################
-# Turtle.setheading(to_angle)
-# Turtle.seth(to_angle)
-#
-# Set the orientation of the turtle to to_angle. Here are some common directions
-# in degrees:
-#
-# Standard Mode     Logo Mode
-# 0   - East        0   - North
-# 90  - North       90  - East
-# 180 - West        180 - South
-# 270 - South       270 - West
-################################################################################
-
-    # def setheading(self, yaw):
-    #     self.yaw = 450-yaw if self._mode == "logo" else angle
-    #
-    # seth = setheading
-
-################################################################################
 # Turtle.home()
 #
 # Move turtle to the origin – coordinates (0,0) – and set its heading to its
@@ -211,7 +192,7 @@ class Turtle:
         self.goto(0,0)
         if wasdown:
             self.pendown()
-        self._heading = [1,0,0]
+        self.heading = [1,0,0]
 #        self.yaw = 0 if self._mode == "logo" else -90
 
     reset = home
@@ -309,16 +290,6 @@ class Turtle:
         return ((x-self._x)**2+(y-self._y)**2)**0.5
 
 ################################################################################
-# Turtle.heading()
-#
-# Return the turtle’s current heading (value depends on the turtle mode,
-# see mode()).
-################################################################################
-
-    def heading(self):
-        return self._heading
-
-################################################################################
 # Turtle.pendown()
 # Turtle.pd()
 # Turtle.down()
@@ -402,6 +373,63 @@ class Turtle:
             self.reset()
         else:
             raise ValueError(f"{RED}Turtle.mode can only be set to \"logo\" or \"standard\"")
+
+################################################################################
+# L-system
+################################################################################
+
+    @property
+    def orientation(self):
+        return self.heading, self.normal
+
+    @orientation.setter
+    def orientation(self, value):
+        self.heading, self.normal = value
+
+    def lsystem(self, name=None, axiom=None, rules=None, n=None, seg=10, angle=None):
+        import json
+        if name is not None:
+            self._machine.queue(comment='Loading L-system from JSON', style='turtle')
+            with open(f"tables/l-systems.json") as f:
+                systems = json.load(f)
+                system = systems.get(name,None)
+                if system is None:
+                    raise ValueError(f"{RED}{name} doesn't appear to be defined.  See `tables/l-systems.json` for all known systems{ENDC}")
+                if axiom is None: axiom = system['axiom']
+                if rules is None: rules = system['rules']
+                if angle is None: angle = system['angle']
+                if n is None: n = system['n']
+
+        if None in [axiom, rules, angle, n]:
+            raise ValueError(f"{RED}L-systems must have axiom, rules, angle, and n defined.{ENDC}")
+
+        seq = axiom
+        for _ in range(n):
+            seq = ''.join([rules.get(c,c) for c in seq])
+        print(seq)
+        stack = []
+        for command in seq:
+            if command in ['A','B','F','G']:
+                if not self._isdown:
+                    self.pendown()
+                self.forward(seg)
+            elif command == 'f':
+                if self._isdown:
+                    self.penup()
+                self.forward(seg)
+            elif command == '+':
+                self.right(angle)
+            elif command == '-':
+                self.left(angle)
+            elif command == '[':
+                stack.append((self.position(), self.orientation))
+            elif command == ']':
+                position, orientation = stack.pop()
+                if position != self.position():
+                    if self._isdown:
+                        self.penup()
+                    self.goto(position[0], position[1])
+                self.orientation = orientation
 
 ################################################################################
 # Squirtle -- A turtle that extrudes filament

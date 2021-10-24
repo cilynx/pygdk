@@ -1,0 +1,11 @@
+{
+   "Binary Tree" : {
+      "angle" : 45,
+      "axiom" : "A",
+      "n" : 5,
+      "rules" : {
+         "A" : "B[-A]+A",
+         "B" : "BB"
+      }
+   }
+}

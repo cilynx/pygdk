@@ -17,14 +17,13 @@ class Plotter(Machine):
     def __init__(self, json_file, safe_z=10):
         super().__init__(json_file)
         self.queue(comment='Loading Plotter parameters from JSON', style='plotter')
-        with open(f"machines/{json_file}") as f:
-            if 'Plotter' not in self.dict:
-                raise KeyError(f"Machine config does not include Plotter.  See https://github.com/cilynx/pygdk/blob/main/onefinity.json for an example Plotter config.")
-            self._plotter = self.dict['Plotter']
-            if 'Tool Table' not in self.dict:
-                raise KeyError(f"{RED}You machine configuration must reference a tool table file{ENDC}")
-            with open(f"tables/{self.dict['Tool Table']}", 'r') as tt:
-                self._tool_table = json.load(tt)
+        if 'Plotter' not in self.dict:
+            raise KeyError(f"Machine config does not include Plotter.  See https://github.com/cilynx/pygdk/blob/main/onefinity.json for an example Plotter config.")
+        self._plotter = self.dict['Plotter']
+        if 'Tool Table' not in self.dict:
+            raise KeyError(f"{RED}You machine configuration must reference a tool table file{ENDC}")
+        with open(f"tables/{self.dict['Tool Table']}", 'r') as tt:
+            self._tool_table = json.load(tt)
 
         self.safe_z = safe_z
 

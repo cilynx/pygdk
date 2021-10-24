@@ -74,6 +74,41 @@ class Mill(Machine):
             self.queue(comment='Cannot calculate CSS from RPM because tool diameter is undefined', style='warning')
 
 ################################################################################
+# Feeds and Speeds
+################################################################################
+
+    def update_fas(self):
+        if self.material and self.tool:
+            fas_file = 'tables/feeds-and-speeds.json'
+            with open(fas_file, 'r') as fas:
+                self._fas = json.load(fas)
+            sfm = self._fas['SFM']
+            chipload = self._fas['Chipload']
+            cutter = self.tool.material
+            if self.material in sfm[cutter] and self.material in chipload:
+                self.queue(comment=f"Workpiece is {self.material}", style='machine')
+
+                if self.tool.rpm:
+                    rpm = (self.tool.rpm[self.material][0]+self.tool.rpm[self.material][1])/2
+                    self.queue(comment=f"Using tool manufacturer recommended spindle RPM: {rpm:.4f} rpm", style='machine')
+                    self.rpm = rpm
+                else:
+                    self.css = (sfm[cutter][self.material][0]+sfm[cutter][self.material][1])/2/196.85
+
+                if self.tool.ipm:
+                    ipm = (self.tool.ipm[self.material][0]+self.tool.ipm[self.material][1])/2
+                    self.queue(comment=f"Using tool manufacturer recommended feed: {ipm:.4f} in/min", style='machine')
+                    self.feed = ipm*25.4
+                else:
+                    self.queue(comment=f"No manufacturer-recommended IPM Feed.  Calculating.", style='machine')
+                    cl_range = chipload[self.material].get(f"{self.tool.diameter/25.4:.3f}", None)
+                    if cl_range:
+                        cl_mean = (cl_range[0]+cl_range[1])/2
+                        self.feed = self.rpm * self.tool.flutes * cl_mean * 25.4
+                    else:
+                        self.queue(comment=f"Tool not available in chipload table.  You're on your own for feeds and speeds.", style='warning')
+
+################################################################################
 # Linear Interpolated Cuts (G1)
 ################################################################################
 
