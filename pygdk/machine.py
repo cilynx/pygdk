@@ -51,9 +51,9 @@ class Machine:
             self._css = 0
             self._turtle = None
             self._optimize = False
-            self._x = 0
-            self._y = 0
-            self._z = 0
+            self._x = None
+            self._y = None
+            self._z = None
             self._linear_moves = {None:[]}
             self._optimize_tool = None
             self._material = None
@@ -248,9 +248,25 @@ class Machine:
             raise ValueError(f"{RED}Must set Machine.feed (directly or indirectly) prior to executing cuts")
 
     @feed.setter
-    def feed(self, feed):
-        self._feed = feed
+    def feed(self, value):
+        if value is None:
+            raise ValueError(f"{RED}Machine.feed cannot be set to None")
+        self._feed = value
         self.queue(comment=f"Using Feed: {self.feed:.4f} mm/min | {self.feed/25.4:.4f} in/min | {self.feed/25.4/12:.4f} ft/min", style='machine')
+
+    @property
+    def accel(self):
+        if self._accel is not None:
+            return self._accel
+        else:
+            raise ValueError(f"{RED}Machine.accel must be set prior to being queried")
+
+    @accel.setter
+    def accel(self, value):
+        if value is None:
+            raise ValueError(f"{RED}Machine.accel cannot be set to None")
+        self._accel = value
+        self.queue(code=f"M204 S{value}", comment="Set acceleration")
 
 ################################################################################
 # Absolute & Incremental Movement Modes
