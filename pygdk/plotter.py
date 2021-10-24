@@ -43,13 +43,7 @@ class Plotter(Machine):
 
         if self._optimize:
             if value is None:
-                self._optimize = False
-                for color in self._linear_moves:
-                    if color:
-                        self.pen_color = color
-                        for move in self._linear_moves[color]:
-                            self.rapid(move[0][0], move[0][1], move[0][2], comment="Rapid to next start")
-                            self.linear_interpolation(move[1][0], move[1][1], move[1][2], comment="Execute move")
+                self.optimize_linear_moves()
             elif any(value in row for row in self._plotter['Magazine']):
                 self._linear_moves.setdefault(value,[])
                 self._optimize_tool = value
@@ -81,3 +75,42 @@ class Plotter(Machine):
                     self.tool = value
                     return self.tool
             raise ValueError(f"{RED}'{value}' is not a configured color.  Options are: {self._plotter['Magazine']}" )
+
+################################################################################
+# Optimize Linear Moves
+################################################################################
+
+
+    def optimize_linear_moves(self):
+        self._optimize = False
+        turtle = self.turtle(verbose=True, z_draw=-124)
+        for color in self._linear_moves:
+            if color:
+                self.pen_color = color
+                pos = self._plotter['Slot Zero']
+                remaining_points = self._linear_moves[color]
+                while remaining_points:
+                    shortest = None
+                    winner = None
+                    for pair in remaining_points:
+                        for point in pair:
+                            ds = dsq(pos, point)
+                            if shortest is None or ds < shortest:
+                                shortest = ds
+                                winner = pair
+                    remaining_points.remove(winner)
+                    points = order(winner, pos)
+                    turtle.penup()
+                    turtle.goto(points[0][0], points[0][1], comment="Rapid to next start")
+                    turtle.pendown()
+                    turtle.goto(points[1][0], points[1][1], comment="Draw next line")
+                    pos = points[1]
+                    # self.rapid(move[0][0], move[0][1], move[0][2], comment="Rapid to next start")
+                    # self.linear_interpolation(move[1][0], move[1][1], move[1][2], comment="Execute move")
+
+def dsq(a, b):
+    return (b[0]-a[0])**2 + (b[1]-a[1])**2
+
+def order(pair, pos):
+#    print(pair if dsq(pos, pair[0]) < dsq(pos, pair[1]) else [pair[1], pair[0]])
+    return pair if dsq(pos, pair[0]) < dsq(pos, pair[1]) else [pair[1], pair[0]]
