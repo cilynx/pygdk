@@ -39,8 +39,9 @@ class Machine:
                     raise ValueError(f"{RED}All machines must have '{req}' defined in their JSON config.  See https://github.com/cilynx/pygdk/tree/main/machines for example configurations.")
             self.name = self.dict['Name']
             self.command_queue = [{'comment': f"Initializing Machine {self.name}", 'style': 'machine'}]
-            self.octoprint_api_key = self.dict.get('OctoPrint API Key', None)
-            self.octoprint_server = self.dict.get('OctoPrint Server', None)
+            self.host = self.dict.get('Hostname / IP', None)
+            self.api_key = self.dict.get('API Key', None)
+            self.controller = self.dict.get('Controller','').lower()
             self.max_feed = self.dict['Max Feed Rate (mm/min)']
             self._x_offset = 0
             self._y_offset = 0
@@ -826,22 +827,60 @@ class Machine:
 # OctoPrint Helper
 ################################################################################
 
-    def octoprint(self, start_print=False, select=True):
-        print(f"{GREEN}Sending to OctoPrint{ENDC}")
+    def octoprint(self, start=False, select=True):
+        print(f"{GREEN}Sending to OctoPrint{' and starting print' if start else ''}{ENDC}")
         if not self.octoprint_server or not self.octoprint_api_key:
-            raise ValueError("You must configure `OctoPrint Server` and `OctoPrint API Key` in your machine JSON before you can send to OctoPrint.  See https://github.com/cilynx/pygdk/tree/main/machines for configuration examples.")
+            raise ValueError("You must configure `Hostname / IP` and `API Key` in your machine JSON before you can send to OctoPrint.  See https://github.com/cilynx/pygdk/tree/main/machines for configuration examples.")
         if not self.gcode:
             self.generate_gcode()
         import os, requests
         filename = os.path.basename(sys.argv[0])+'.g'
         fle={'file': (filename, self.gcode)}
-        url=f"http://{self.octoprint_server}/api/files/local"
-        payload={'select': select, 'print': start_print }
-        header={'X-Api-Key': self.octoprint_api_key }
+        url=f"http://{self.host}/api/files/local"
+        payload={'select': select, 'print': start }
+        header={'X-Api-Key': self.api_key }
         response = requests.post(url, files=fle,data=payload,headers=header)
         print(response.__dict__)
 
     OctoPrint = octoprint
+
+################################################################################
+# Buildbotics / Onefinity Helper
+################################################################################
+
+    def buildbotics(self, start=False):
+        print(f"{GREEN}Sending to Buildbotics Controller{' and starting job' if start else ''}{ENDC}")
+        if not self.host:
+            raise ValueError("You must configure `Hostname / IP` in your machine JSON before you can send to your Buildbotics Controller.  See https://github.com/cilynx/pygdk/tree/main/machines for configuration examples.")
+        if not self.gcode:
+            self.generate_gcode()
+        import os, requests
+        filename = os.path.basename(sys.argv[0])+'.nc'
+        gcode={'gcode': (filename, self.gcode)}
+        api=f"http://{self.host}/api"
+        response = requests.put(f"{api}/file", files=gcode)
+        print(response.__dict__)
+        if start:
+            response = requests.put(f"{api}/start")
+            print(response.__dict__)
+
+    Buildbotics = buildbotics
+    onefinity = buildbotics
+    Onefinity = buildbotics
+
+################################################################################
+# Gcode Upload Dispatcher
+################################################################################
+
+    def send_gcode(self, start=False):
+        if self.controller == 'octoprint':
+            self.octoprint(start)
+        elif self.controller == 'buildbotics':
+            self.buildbotics(start)
+        else:
+            raise ValueError(f"{RED}You must configure `Controller` ('OctoPrint' or 'Buildbotics') in your machine JSON to use dispatched upload.")
+
+    upload_gcode = send_gcode
 
 ################################################################################
 # Camotics Helper

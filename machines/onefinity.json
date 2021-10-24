@@ -1,5 +1,7 @@
 {
    "Name": "Onefinity",
+   "Hostname / IP": "onefinity.local",
+   "Controller": "Buildbotics",
    "Max Feed Rate (mm/min)": 10000,
    "Max Spindle RPM": 24000,
    "Tool Table": "tools.json",
