@@ -51,6 +51,14 @@
          "F" : "+F--F+"
       }
    },
+   "Lévy C Curve" : {
+      "angle" : 45,
+      "axiom" : "F",
+      "n" : 9,
+      "rules" : {
+         "F" : "+F--F+"
+      }
+   },
    "Moore Curve" : {
       "angle" : 90,
       "axiom" : "LFL+F+LFL",
@@ -67,6 +75,56 @@
       "rules" : {
          "L" : "LFRFL-F-RFLFR+F+LFRFL",
          "R" : "RFLFR+F+LFRFL-F-RFLFR"
+      }
+   },
+   "Sierpinski Arrowhead Curve" : {
+      "angle" : 60,
+      "axiom" : "XF",
+      "n" : 5,
+      "rules" : {
+         "X" : "YF+XF+Y",
+         "Y" : "XF-YF-X"
+      }
+   },
+   "Sierpinski Curve" : {
+      "angle" : 45,
+      "axiom" : "F--XF--F--XF",
+      "n" : 4,
+      "rules" : {
+         "X" : "XF+G+XF--F--XF+G+X"
+      }
+   },
+   "Sierpinski Square Curve" : {
+      "angle" : 90,
+      "axiom" : "F+XF+F+XF",
+      "n" : 4,
+      "rules" : {
+         "X" : "XF-F+F-XF+F+XF-F+F-X"
+      }
+   },
+   "Sierpiński Arrowhead Curve" : {
+      "angle" : 60,
+      "axiom" : "XF",
+      "n" : 5,
+      "rules" : {
+         "X" : "YF+XF+Y",
+         "Y" : "XF-YF-X"
+      }
+   },
+   "Sierpiński Curve" : {
+      "angle" : 45,
+      "axiom" : "F--XF--F--XF",
+      "n" : 4,
+      "rules" : {
+         "X" : "XF+G+XF--F--XF+G+X"
+      }
+   },
+   "Sierpiński Square Curve" : {
+      "angle" : 90,
+      "axiom" : "F+XF+F+XF",
+      "n" : 4,
+      "rules" : {
+         "X" : "XF-F+F-XF+F+XF-F+F-X"
       }
    },
    "Terdragon" : {
