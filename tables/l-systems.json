@@ -26,6 +26,15 @@
          "G" : "+F-GG--G-F++F+G"
       }
    },
+   "H-Tree" : {
+      "angle" : 90,
+      "axiom" : "[FX]--[FX]",
+      "lift" : false,
+      "n" : 7,
+      "rules" : {
+         "X" : "[@+[FX]--[FX]]"
+      }
+   },
    "Hilbert Curve" : {
       "angle" : 90,
       "axiom" : "A",

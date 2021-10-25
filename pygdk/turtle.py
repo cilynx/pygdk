@@ -386,7 +386,7 @@ class Turtle:
     def orientation(self, value):
         self.heading, self.normal = value
 
-    def lsystem(self, name=None, axiom=None, rules=None, n=None, seg=10, angle=None, arms=None):
+    def lsystem(self, name=None, axiom=None, rules=None, n=None, seg=10, angle=None, arms=None, lift=True):
         import json
         if name is not None:
             self._machine.queue(comment='Loading L-system from JSON', style='turtle')
@@ -399,6 +399,10 @@ class Turtle:
                 if rules is None: rules = system['rules']
                 if angle is None: angle = system['angle']
                 if n is None: n = system['n']
+                lift = system.get('lift',lift)
+
+        if lift is False:
+            self._machine.safe_z = self._z_draw
 
         if arms is not None:
             angle = 360/arms
@@ -421,14 +425,16 @@ class Turtle:
                 if self._isdown:
                     self.penup()
                 self.forward(seg)
+            elif command == '@':
+                seg = seg*1/(2**0.5)
             elif command == '+':
                 self.right(angle)
             elif command == '-':
                 self.left(angle)
             elif command == '[':
-                stack.append((self.position(), self.orientation))
+                stack.append((self.position(), self.orientation, seg))
             elif command == ']':
-                position, orientation = stack.pop()
+                position, orientation, seg = stack.pop()
                 if position != self.position():
                     if self._isdown:
                         self.penup()
