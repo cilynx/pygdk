@@ -34,6 +34,14 @@
          "F" : "F+F--F+F"
       }
    },
+   "Levy C Curve" : {
+      "angle" : 45,
+      "axiom" : "F",
+      "n" : 9,
+      "rules" : {
+         "F" : "+F--F+"
+      }
+   },
    "Moore Curve" : {
       "angle" : 90,
       "axiom" : "LFL+F+LFL",
