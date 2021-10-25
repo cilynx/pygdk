@@ -8,6 +8,15 @@
          "G" : "GG"
       }
    },
+   "Dragon Curve" : {
+      "angle" : 90,
+      "axiom" : "FX",
+      "n" : 9,
+      "rules" : {
+         "X" : "X+YF+",
+         "Y" : "-FX-Y"
+      }
+   },
    "Hilbert Curve" : {
       "angle" : 90,
       "axiom" : "A",
