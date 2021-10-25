@@ -17,6 +17,15 @@
          "Y" : "-FX-Y"
       }
    },
+   "Gosper Curve" : {
+      "angle" : 60,
+      "axiom" : "F",
+      "n" : 3,
+      "rules" : {
+         "F" : "F-G--G+F++FF+G-",
+         "G" : "+F-GG--G-F++F+G"
+      }
+   },
    "Hilbert Curve" : {
       "angle" : 90,
       "axiom" : "A",
