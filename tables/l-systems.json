@@ -112,6 +112,18 @@
          "G" : "GG"
       }
    },
+   "Stochastic Fuzzy Weed" : {
+      "angle" : 22.5,
+      "axiom" : "X",
+      "n" : 4,
+      "rules" : {
+         "F" : "FF",
+         "X" : [
+            "F-[[X]+X]+F[+FX]-X",
+            "F+[[X]-X]-F[-FX]+X"
+         ]
+      }
+   },
    "Terdragon" : {
       "angle" : 120,
       "axiom" : "F",

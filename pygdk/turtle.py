@@ -1,4 +1,6 @@
 import math
+import random
+import copy
 
 RED  = '\033[31m' # Red
 CYAN   = '\033[36m'
@@ -413,7 +415,19 @@ class Turtle:
 
         seq = axiom
         for _ in range(n):
-            seq = ''.join([rules.get(c,c) for c in seq])
+            _rules = copy.deepcopy(rules)
+            for rule in _rules:
+                if isinstance(_rules[rule], list):
+                    _rules[rule] = random.choice(_rules[rule])
+                elif isinstance(_rules[rule], dict):
+                    options = []
+                    weights = []
+                    for option in _rules[rule]:
+                        options.append(option)
+                        weights.append(_rules[rule][option])
+                    _rules[rule] = random.choices(options, weights, k=1)[0]
+            seq = ''.join([_rules.get(c,c) for c in seq])
+
         print(seq)
         stack = []
         for command in seq:
