@@ -51,5 +51,22 @@
          "L" : "LFRFL-F-RFLFR+F+LFRFL",
          "R" : "RFLFR+F+LFRFL-F-RFLFR"
       }
+   },
+   "Terdragon" : {
+      "angle" : 120,
+      "axiom" : "F",
+      "n" : 9,
+      "rules" : {
+         "F" : "F+F-F"
+      }
+   },
+   "Twindragon" : {
+      "angle" : 90,
+      "axiom" : "FX+FX+",
+      "n" : 9,
+      "rules" : {
+         "X" : "X+YF",
+         "Y" : "FX-Y"
+      }
    }
 }
