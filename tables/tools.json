@@ -362,7 +362,7 @@
     "flute_length": 0.75,
     "diameter": 0.5,
     "shank": 0.25,
-    "material": "HSS",
+    "material": "Carbide",
     "description": "1/2\" Round Nose Router Bit, 2 Flutes, 1/4\" Shank, Carbide"
   },
   "151": {
@@ -373,7 +373,51 @@
     "flute_length": 0.75,
     "diameter": 0.375,
     "shank": 0.25,
-    "material": "HSS",
+    "material": "Carbide",
     "description": "3/8\" Round Nose Router Bit, 2 Flutes, 1/4\" Shank, Carbide"
+  },
+  "152": {
+    "units": "imperial",
+    "shape": "cylindrical",
+    "length": 1.25,
+    "flutes": 2,
+    "flute_length": 0.75,
+    "diameter": 0.75,
+    "shank": 0.25,
+    "material": "Carbide",
+    "description": "3/4\" Straight Router Bit, 2 Flutes, 1/4\" Shank, Carbide"
+  },
+  "153": {
+    "units": "imperial",
+    "shape": "cylindrical",
+    "length": 1.25,
+    "flutes": 2,
+    "flute_length": 1,
+    "diameter": 0.5,
+    "shank": 0.25,
+    "material": "Carbide",
+    "description": "1/2\" Straight Router Bit, 2 Flutes, 1/4\" Shank, Carbide"
+  },
+  "154": {
+    "units": "imperial",
+    "shape": "cylindrical",
+    "length": 1.25,
+    "flutes": 2,
+    "flute_length": 1,
+    "diameter": 0.375,
+    "shank": 0.25,
+    "material": "Carbide",
+    "description": "3/8\" Straight Router Bit, 2 Flutes, 1/4\" Shank, Carbide"
+  },
+  "155": {
+    "units": "imperial",
+    "shape": "cylindrical",
+    "length": 1.25,
+    "flutes": 2,
+    "flute_length": 0.75,
+    "diameter": 0.25,
+    "shank": 0.25,
+    "material": "Carbide",
+    "description": "1/4\" Straight Router Bit, 2 Flutes, 1/4\" Shank, Carbide"
   }
 }

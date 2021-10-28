@@ -33,7 +33,7 @@ onefinity.helix(c_x=0, c_y=0, diameter=77, depth=21, z_step=10, outside=True)
 
 onefinity.print_gcode() # Dump gcode to stdout
 onefinity.CAMotics()    # Simulate gcode in CAMotics
-onefinity.OctoPrint()   # Send gcode to OctoPrint
+onefinity.send_gcode()   # Send gcode to the machine
 ```
 This design assumes your stock is 21mm thick and that you'll be zeroing Z on the surface.  
 
