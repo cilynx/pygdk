@@ -403,6 +403,7 @@ class Turtle:
                 if n is None: n = system['n']
                 lift = system.get('lift',lift)
 
+        safe_z = self._machine.safe_z
         if lift is False:
             self._machine.safe_z = self._z_draw
 
@@ -436,7 +437,7 @@ class Turtle:
                     self.pendown()
                 self.forward(seg)
             elif command == 'f':
-                if self._isdown:
+                if self._isdown and lift:
                     self.penup()
                 self.forward(seg)
             elif command == '@':
@@ -450,10 +451,11 @@ class Turtle:
             elif command == ']':
                 position, orientation, seg = stack.pop()
                 if position != self.position():
-                    if self._isdown:
+                    if self._isdown and lift:
                         self.penup()
                     self.goto(position[0], position[1])
                 self.orientation = orientation
+        self._machine.safe_z = safe_z
 
 ################################################################################
 # Squirtle -- A turtle that extrudes filament
