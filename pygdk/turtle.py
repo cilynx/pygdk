@@ -65,8 +65,8 @@ class Turtle:
 # headed. Do not change the turtle’s heading.
 ################################################################################
 
-    def back(self, distance):
-        self.forward(-distance)
+    def back(self, distance, dz=0):
+        self.forward(-distance, dz)
 
     backward = back
     bk = back
