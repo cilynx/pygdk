@@ -59,6 +59,63 @@ If not, you can copy the gcode to your machine however you would normally do it.
 
 Take a deep breath, remember that you are personally responsible for everything good or bad that your machine does, then let it rip.
 
+## Machine Configuration
+```
+{
+   "Name": "Onefinity",
+   "WeMo": "192.168.1.15",
+   "Boot Wait": 35,
+   "Shutdown Wait": 10,
+   "Hostname / IP": "onefinity.local",
+   "Controller": "Buildbotics",
+   "Max Feed Rate (mm/min)": 10000,
+   "Max Spindle RPM": 24000,
+   "Tool Table": "tools.json",
+   "Plotter": {
+      "Magazine": [
+         ["","Light Blue","Lime",""],
+         ["Black","Red","Blue","Orange"]
+      ],
+      "Slot Zero": [806,33],
+      "Pen Spacing": 13.7,
+      "Z-Touch": -123,
+      "Z-Click": -88,
+      "Z-Stage": -110
+   }
+}
+```
+`Name` is the human-readable name of your machine.  It's not used for anything internally, just for printing in output so you know which machine we're talking about.
+
+`WeMo` is an optional parameter used by `Machine.power_on()` and `Machine.power_off()`.  If it is defined as the IP address of a WeMo smart plug, `pygdk` will use this smart plug to power on and off your machine.
+
+`Boot Wait` is an optional parameter used by `Machine.power_on()` and `Machine.power_off()`.  If it is defined, `pygdk` will wait this many seconds after powering on the machine, before asking it to do anything.
+
+`Shutdown Wait` is an optional parameter used by `Machine.power_on()` and `Machine.power_off()`.  If it is defined, `pygdk` will wait this many seconds after sending the controller the shutdown signal, before turning off the power.
+
+`Hostname / IP` is an optional parameter used by `Machine.send_gcode()`.  If it is defined, `pygdk` will use this host information to communicate with your machine controller.
+
+`Controller` is an optional parameter used by `Machine.send_gcode()`.  If it is defined, `pygdk` will use this information to integrate properly with your controller.  Valid options are `Buildbotics` and `OctoPrint`.
+
+`Max Feed Rate (mm/min)` is an optional parameter used by the motion planner.  If it is defined, `pygdk` will use this value as the default feed for rapids and will ensure that calculated feeds are less than or equal to this value.
+
+`Max Spindle RPM` is an optional parameter used by the feeds-and-speeds planner.  If it is defined, `pygdk` will will ensure that calculated RPM are less than or equal to this value and will adjust feeds to maintain appropriate chipload.
+
+`Tool Table` is an optional CAMotics-backwards-compatible tool table used by the feeds-and-speeds planner.  If it is defined, `pygdk` will load tool parameters from this JSON file.
+
+`Plotter` is a parameter set required for plotter-flavored initialization, but ignored otherwise.  All Plotter parameters are required for plotting.
+
+`Magazine` is a matrix of pen colors in the magazine.  Any empty slots can be represented by an empty string.  These are the color names you use for `Machine.pen_color()` and `Turtle.pencolor()`.
+
+`Slot Zero` is the absolute machine [x,y] coordinates when the back left pen slot is directly below the pen changer post.
+
+`Pen Spacing` is the distance between pen slots.  In the current magazine design, it is 13.7, but this is subject to change.  If Pen 0 selects correctly, but others do not, you can adjust this value accordingly.
+
+`Z-Touch` is the absolute machine z coordinate where the actuated pen just touches the drawing surface.  You want this to be pretty well dead-on, but if you're 0.5mm to close, that's better than not touching -- you'll just have a little more play in the pen tip.
+
+`Z-Click` is the absolute machine z coordinate where the selected pen actuates.  This needs to be close to dead-on, but you may need to fudge it 1mm or so to account for differences between pens.
+
+`Z-Stage` is an absolute machine z coordinate where an actuated pen will not touch the drawing surface and the pens can still slide under the pen changer post without colliding.  It doesn't matter if you err closer to the drawing surface or the changer post so long as you're not running into either one.
+
 ## API
 
 ### Machine

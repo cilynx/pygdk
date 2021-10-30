@@ -429,7 +429,7 @@ class Turtle:
                     _rules[rule] = random.choices(options, weights, k=1)[0]
             seq = ''.join([_rules.get(c,c) for c in seq])
 
-        print(seq)
+#        print(seq)
         stack = []
         for command in seq:
             if command in ['F','G']:

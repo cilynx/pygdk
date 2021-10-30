@@ -62,6 +62,9 @@ class Machine:
             self._y_clear = None
             self._z_clear = None
             self.gcode = None
+            self.wemo = self.dict.get('WeMo', None)
+            self.boot_wait = self.dict.get('Boot Wait', None)
+            self.shutdown_wait = self.dict.get('Shutdown Wait', None)
 
 ################################################################################
 # Command Queue
@@ -834,10 +837,38 @@ class Machine:
     Onefinity = buildbotics
 
 ################################################################################
+# Controller Power On/Off
+################################################################################
+
+    def power_on(self):
+        if self.wemo:
+            import pywemo, time
+            wemo = pywemo.discovery.device_from_description(f"http://{self.wemo}:49153/setup.xml")
+            if wemo.get_state() == 0:
+                print("Powering On")
+                wemo.on()
+                print(f"Waiting {self.boot_wait}s for Controller to Boot")
+                time.sleep(self.boot_wait)
+
+    def power_off(self):
+        if self.wemo:
+            import pywemo, time, requests
+            wemo = pywemo.discovery.device_from_description(f"http://{self.wemo}:49153/setup.xml")
+            if wemo.get_state() == 1:
+                print("Sending Shutdown Signal")
+                response = requests.put(f"http://{self.host}/api/shutdown")
+                print(response)
+                print(f"Waiting {self.shutdown_wait}s for Controller to Shutdown")
+                time.sleep(self.shutdown_wait)
+                print("Powering Off")
+                wemo.off()
+
+################################################################################
 # Gcode Upload Dispatcher
 ################################################################################
 
     def send_gcode(self, start=False):
+        self.power_on()
         if self.controller == 'octoprint':
             self.octoprint(start)
         elif self.controller == 'buildbotics':
