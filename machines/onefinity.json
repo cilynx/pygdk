@@ -1,7 +1,26 @@
 {
    "Name": "Onefinity",
-   "Hostname / IP": "onefinity.local",
-   "Controller": "Buildbotics",
+   "Controller": {
+      "Flavor": "Buildbotics",
+      "Tasmota": ["192.168.1.10",1],
+      "Boot Wait": 35,
+      "Shutdown Wait": 10,
+      "Hostname / IP": "onefinity.local"
+   },
+   "Accessories": {
+       "Screen": {
+          "Tasmota": ["192.168.1.10",2],
+          "Auto": "Before"
+       },
+       "VFD": {
+          "Tasmota": ["192.168.1.11",2],
+          "Auto": "Before"
+       },
+       "Light": {
+          "WeMo": ["192.168.1.12",1],
+          "Auto": "After"
+       }
+   },
    "Max Feed Rate (mm/min)": 10000,
    "Max Spindle RPM": 24000,
    "Tool Table": "tools.json",

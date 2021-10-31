@@ -63,11 +63,27 @@ Take a deep breath, remember that you are personally responsible for everything 
 ```
 {
    "Name": "Onefinity",
-   "WeMo": "192.168.1.15",
-   "Boot Wait": 35,
-   "Shutdown Wait": 10,
-   "Hostname / IP": "onefinity.local",
-   "Controller": "Buildbotics",
+   "Controller": {
+      "Flavor": "Buildbotics",
+      "Tasmota": ["192.168.1.10",1],
+      "Boot Wait": 35,
+      "Shutdown Wait": 10,
+      "Hostname / IP": "onefinity.local"
+   },
+   "Accessories": {
+       "Screen": {
+          "Tasmota": ["192.168.1.10",2],
+          "Auto": "Before"
+       },
+       "VFD": {
+          "Tasmota": ["192.168.1.11",2],
+          "Auto": "Before"
+       },
+       "Light": {
+          "WeMo": ["192.168.1.12",1],
+          "Auto": "After"
+       }
+   },
    "Max Feed Rate (mm/min)": 10000,
    "Max Spindle RPM": 24000,
    "Tool Table": "tools.json",
@@ -86,15 +102,19 @@ Take a deep breath, remember that you are personally responsible for everything 
 ```
 `Name` is the human-readable name of your machine.  It's not used for anything internally, just for printing in output so you know which machine we're talking about.
 
-`WeMo` is an optional parameter used by `Machine.power_on()` and `Machine.power_off()`.  If it is defined as the IP address of a WeMo smart plug, `pygdk` will use this smart plug to power on and off your machine.
+`Controller` is a optional parameter set, but unless you're planning on just generating gcode and handling all of the logistics of the machine yourself, you probably want to define them.
 
-`Boot Wait` is an optional parameter used by `Machine.power_on()` and `Machine.power_off()`.  If it is defined, `pygdk` will wait this many seconds after powering on the machine, before asking it to do anything.
+`Flavor` is used by `Machine.send_gcode()`.  If it is defined, `pygdk` will use this information to integrate properly with your controller.  Valid options are `Buildbotics` and `OctoPrint`.
 
-`Shutdown Wait` is an optional parameter used by `Machine.power_on()` and `Machine.power_off()`.  If it is defined, `pygdk` will wait this many seconds after sending the controller the shutdown signal, before turning off the power.
+`Boot Wait` is used by `Machine.power_on()` and `Machine.power_off()`.  If it is defined, `pygdk` will wait this many seconds after powering on the machine, before asking it to do anything.
+
+`Shutdown Wait` is used by `Machine.power_on()` and `Machine.power_off()`.  If it is defined, `pygdk` will wait this many seconds after sending the controller the shutdown signal, before turning off the power.
 
 `Hostname / IP` is an optional parameter used by `Machine.send_gcode()`.  If it is defined, `pygdk` will use this host information to communicate with your machine controller.
 
-`Controller` is an optional parameter used by `Machine.send_gcode()`.  If it is defined, `pygdk` will use this information to integrate properly with your controller.  Valid options are `Buildbotics` and `OctoPrint`.
+`Tasmota` and `WeMo` are used by `Machine.power_on()` and `Machine.power_off()`.  If one or the other is defined as the IP address and socket ID of a Tasmota or WeMo compatible smart plug, `pygdk` will use this smart plug to power on and off your controller and/or accessories.
+
+`Accessories` are anything that's plugged into a smart plug as defined above.  Set `Auto` to `Before` for the accessory to power up before the controller or `After` to power up after the controller has fully booted.  Most controllers like their screens to be on before they're booted and I like to use my machine lights as an indicator of if I'm fully booted / fully shut down.
 
 `Max Feed Rate (mm/min)` is an optional parameter used by the motion planner.  If it is defined, `pygdk` will use this value as the default feed for rapids and will ensure that calculated feeds are less than or equal to this value.
 

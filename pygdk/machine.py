@@ -4,6 +4,8 @@ import math
 
 from .tool import Tool
 from .turtle import Turtle
+from .controller import Controller
+from .accessories import Accessory
 
 BLACK  = '\033[30m'
 RED    = '\033[31m'
@@ -39,9 +41,10 @@ class Machine:
                     raise ValueError(f"{RED}All machines must have '{req}' defined in their JSON config.  See https://github.com/cilynx/pygdk/tree/main/machines for example configurations.")
             self.name = self.dict['Name']
             self.command_queue = [{'comment': f"Initializing Machine {self.name}", 'style': 'machine'}]
-            self.host = self.dict.get('Hostname / IP', None)
-            self.api_key = self.dict.get('API Key', None)
-            self.controller = self.dict.get('Controller','').lower()
+            self.controller = Controller(self.dict.get('Controller', None)) if self.dict.get('Controller', None) else None
+            self.accessories = None
+            if self.dict.get('Accessories', None):
+                self.accessories = [Accessory(name, self.dict['Accessories'][name]) for name in self.dict['Accessories']]
             self.max_feed = self.dict['Max Feed Rate (mm/min)']
             self._x_offset = 0
             self._y_offset = 0
@@ -62,9 +65,6 @@ class Machine:
             self._y_clear = None
             self._z_clear = None
             self.gcode = None
-            self.wemo = self.dict.get('WeMo', None)
-            self.boot_wait = self.dict.get('Boot Wait', None)
-            self.shutdown_wait = self.dict.get('Shutdown Wait', None)
 
 ################################################################################
 # Command Queue
@@ -797,16 +797,18 @@ class Machine:
 
     def octoprint(self, start=False, select=True):
         print(f"{GREEN}Sending to OctoPrint{' and starting print' if start else ''}{ENDC}")
-        if not self.octoprint_server or not self.octoprint_api_key:
-            raise ValueError("You must configure `Hostname / IP` and `API Key` in your machine JSON before you can send to OctoPrint.  See https://github.com/cilynx/pygdk/tree/main/machines for configuration examples.")
+        host = self.controller.get("Hostname / IP", None)
+        api_key = self.controller.get("API Key", None)
+        if not host or not api_key:
+            raise ValueError("You must configure `Hostname / IP` and `API Key` in the `Controller` section of your machine JSON before you can send to OctoPrint.  See https://github.com/cilynx/pygdk/tree/main/machines for configuration examples.")
         if not self.gcode:
             self.generate_gcode()
         import os, requests
         filename = os.path.basename(sys.argv[0])+'.g'
         fle={'file': (filename, self.gcode)}
-        url=f"http://{self.host}/api/files/local"
+        url=f"http://{host}/api/files/local"
         payload={'select': select, 'print': start }
-        header={'X-Api-Key': self.api_key }
+        header={'X-Api-Key': api_key }
         response = requests.post(url, files=fle,data=payload,headers=header)
         print(response.__dict__)
 
@@ -818,18 +820,18 @@ class Machine:
 
     def buildbotics(self, start=False):
         print(f"{GREEN}Sending to Buildbotics Controller{' and starting job' if start else ''}{ENDC}")
-        if not self.host:
-            raise ValueError("You must configure `Hostname / IP` in your machine JSON before you can send to your Buildbotics Controller.  See https://github.com/cilynx/pygdk/tree/main/machines for configuration examples.")
+        host = self.controller.get("Hostname / IP", None)
+        if not host:
+            raise ValueError("You must configure `Hostname / IP` in the `Controller` section of your machine JSON before you can send to your Buildbotics Controller.  See https://github.com/cilynx/pygdk/tree/main/machines for configuration examples.")
         if not self.gcode:
             self.generate_gcode()
         import os, requests
         filename = os.path.basename(sys.argv[0])+'.nc'
         gcode={'gcode': (filename, self.gcode)}
-        api=f"http://{self.host}/api"
-        response = requests.put(f"{api}/file", files=gcode)
+        response = requests.put(f"http://{host}/api/file", files=gcode)
         print(response.__dict__)
         if start:
-            response = requests.put(f"{api}/start")
+            response = requests.put(f"http://{host}/api/start")
             print(response.__dict__)
 
     Buildbotics = buildbotics
@@ -837,31 +839,37 @@ class Machine:
     Onefinity = buildbotics
 
 ################################################################################
-# Controller Power On/Off
+# Power On/Off
 ################################################################################
 
     def power_on(self):
-        if self.wemo:
-            import pywemo, time
-            wemo = pywemo.discovery.device_from_description(f"http://{self.wemo}:49153/setup.xml")
-            if wemo.get_state() == 0:
-                print("Powering On")
-                wemo.on()
-                print(f"Waiting {self.boot_wait}s for Controller to Boot")
-                time.sleep(self.boot_wait)
+        print("Machine.power_on()")
+        for accessory in self.accessories:
+            if accessory.before:
+                print(f"Powering on {accessory.name}")
+                accessory.power_on()
+
+        print("Powering on Controller")
+        self.controller.power_on()
+
+        for accessory in self.accessories:
+            if accessory.after:
+                print(f"Powering on {accessory.name}")
+                accessory.power_on()
 
     def power_off(self):
-        if self.wemo:
-            import pywemo, time, requests
-            wemo = pywemo.discovery.device_from_description(f"http://{self.wemo}:49153/setup.xml")
-            if wemo.get_state() == 1:
-                print("Sending Shutdown Signal")
-                response = requests.put(f"http://{self.host}/api/shutdown")
-                print(response)
-                print(f"Waiting {self.shutdown_wait}s for Controller to Shutdown")
-                time.sleep(self.shutdown_wait)
-                print("Powering Off")
-                wemo.off()
+        print("Machine.power_off()")
+        for accessory in self.accessories:
+            if accessory.before:
+                print(f"Powering off {accessory.name}")
+                accessory.power_off()
+
+        self.controller.power_off()
+
+        for accessory in self.accessories:
+            if accessory.after:
+                print(f"Powering off {accessory.name}")
+                accessory.power_off()
 
 ################################################################################
 # Gcode Upload Dispatcher
@@ -869,9 +877,9 @@ class Machine:
 
     def send_gcode(self, start=False):
         self.power_on()
-        if self.controller == 'octoprint':
+        if self.controller.get('Flavor', None).lower() == 'octoprint':
             self.octoprint(start)
-        elif self.controller == 'buildbotics':
+        elif self.controller.get('Flavor', None).lower() == 'buildbotics':
             self.buildbotics(start)
         else:
             raise ValueError(f"{RED}You must configure `Controller` ('OctoPrint' or 'Buildbotics') in your machine JSON to use dispatched upload.")
