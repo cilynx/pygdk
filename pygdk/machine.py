@@ -5,7 +5,7 @@ import math
 from .tool import Tool
 from .turtle import Turtle
 from .controller import Controller
-from .accessories import Accessory
+from .accessory import Accessory
 
 BLACK  = '\033[30m'
 RED    = '\033[31m'
@@ -820,18 +820,17 @@ class Machine:
 
     def buildbotics(self, start=False):
         print(f"{GREEN}Sending to Buildbotics Controller{' and starting job' if start else ''}{ENDC}")
-        host = self.controller.get("Hostname / IP", None)
-        if not host:
+        if not self.controller.host:
             raise ValueError("You must configure `Hostname / IP` in the `Controller` section of your machine JSON before you can send to your Buildbotics Controller.  See https://github.com/cilynx/pygdk/tree/main/machines for configuration examples.")
         if not self.gcode:
             self.generate_gcode()
         import os, requests
         filename = os.path.basename(sys.argv[0])+'.nc'
         gcode={'gcode': (filename, self.gcode)}
-        response = requests.put(f"http://{host}/api/file", files=gcode)
+        response = requests.put(f"http://{self.controller.host}/api/file", files=gcode)
         print(response.__dict__)
         if start:
-            response = requests.put(f"http://{host}/api/start")
+            response = requests.put(f"http://{self.controller.host}/api/start")
             print(response.__dict__)
 
     Buildbotics = buildbotics
@@ -844,32 +843,36 @@ class Machine:
 
     def power_on(self):
         print("Machine.power_on()")
-        for accessory in self.accessories:
-            if accessory.before:
-                print(f"Powering on {accessory.name}")
-                accessory.power_on()
+        if self.controller.is_off:
 
-        print("Powering on Controller")
-        self.controller.power_on()
+            for accessory in self.accessories:
+                if accessory.before:
+                    print(f"Powering on {accessory.name}")
+                    accessory.power_on()
 
-        for accessory in self.accessories:
-            if accessory.after:
-                print(f"Powering on {accessory.name}")
-                accessory.power_on()
+            print("Powering on Controller")
+            self.controller.power_on()
+
+            for accessory in self.accessories:
+                if accessory.after:
+                    print(f"Powering on {accessory.name}")
+                    accessory.power_on()
 
     def power_off(self):
         print("Machine.power_off()")
-        for accessory in self.accessories:
-            if accessory.before:
-                print(f"Powering off {accessory.name}")
-                accessory.power_off()
+        if self.controller.is_on:
+            
+            for accessory in self.accessories:
+                if accessory.before:
+                    print(f"Powering off {accessory.name}")
+                    accessory.power_off()
 
-        self.controller.power_off()
+            self.controller.power_off()
 
-        for accessory in self.accessories:
-            if accessory.after:
-                print(f"Powering off {accessory.name}")
-                accessory.power_off()
+            for accessory in self.accessories:
+                if accessory.after:
+                    print(f"Powering off {accessory.name}")
+                    accessory.power_off()
 
 ################################################################################
 # Gcode Upload Dispatcher
@@ -877,9 +880,9 @@ class Machine:
 
     def send_gcode(self, start=False):
         self.power_on()
-        if self.controller.get('Flavor', None).lower() == 'octoprint':
+        if self.controller.flavor == 'octoprint':
             self.octoprint(start)
-        elif self.controller.get('Flavor', None).lower() == 'buildbotics':
+        elif self.controller.flavor == 'buildbotics':
             self.buildbotics(start)
         else:
             raise ValueError(f"{RED}You must configure `Controller` ('OctoPrint' or 'Buildbotics') in your machine JSON to use dispatched upload.")
