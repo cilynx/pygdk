@@ -461,26 +461,30 @@ class Turtle:
 # Heightmaps
 ################################################################################
 
-    def heightmap(self, filename, z_bottom=-10, x=None, y=None, invert=False):
+    def heightmap(self, filename, z_bottom=-10, x=None, y=None, invert=False, res=1):
         from PIL import Image, ImageOps
         im = Image.open(filename).convert("L")
         width, height = im.size
         if x is not None:
-            im = im.resize((int(x), int(x*height/width)))
+            im = im.resize((res*int(x), res*int(x*height/width)))
             width, height = im.size
         if invert:
             im = ImageOps.invert(im)
         pixels = im.load()
         self.pendown()
         odd = False
+        first = True
         for y in range(height):
             odd = not odd
-            _y = height-y-1
             for x in range(width):
                 _x = x if odd else width-x-1
-                _z = pixels[_x,y]/255*z_bottom
+                _z = pixels[_x,height-y-1]/255*z_bottom
                 if _z != 0:
-                    self.goto(_x,_y,_z)
+                    if first:
+                        self.goto(_x/res,y/res)
+                        first = False
+                    self.goto(_x/res,y/res,_z)
+        self.penup()
 
 ################################################################################
 # Squirtle -- A turtle that extrudes filament
