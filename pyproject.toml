@@ -1,0 +1,20 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "pygdk"
+authors = [
+    {name = "Randy Will", email = "randall.will@gmail.com"},
+]
+readme = "README.md"
+classifiers = [
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+]
+dynamic = ["version", "description"]
+dependencies = [
+    "requests",
+]
+
+[project.urls]
+Source = "https://github.com/cilynx/pygdk"
