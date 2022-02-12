@@ -458,6 +458,39 @@ class Turtle:
         self._machine.safe_z = safe_z
 
 ################################################################################
+# Bethlehem Star
+#
+# r1 is the radius of circle of the inside vertices
+# r2 is the four smallest points
+# r3 is the three medium points on top
+# r4 is the long point on the bottom
+################################################################################
+
+    def bethlehem_star(self, r1, r2, r3, r4):
+        angle = math.radians(-90)
+        self.right(90)
+        self.forward(r4) # Start at the bottom
+        self.pendown()
+        for i in range(3):
+            angle += math.radians(22.5) # Inside vertex
+            self.goto(r1*math.cos(angle), r1*math.sin(angle))
+            angle += math.radians(22.5) # Small point
+            self.goto(r2*math.cos(angle), r2*math.sin(angle))
+            angle += math.radians(22.5) # Inside vertex
+            self.goto(r1*math.cos(angle), r1*math.sin(angle))
+            angle += math.radians(22.5) # Medium Point
+            self.goto(r3*math.cos(angle), r3*math.sin(angle))
+        angle += math.radians(22.5) # Inside vertex
+        self.goto(r1*math.cos(angle), r1*math.sin(angle))
+        angle += math.radians(22.5) # Small point
+        self.goto(r2*math.cos(angle), r2*math.sin(angle))
+        angle += math.radians(22.5) # Inside vertex
+        self.goto(r1*math.cos(angle), r1*math.sin(angle))
+        angle += math.radians(22.5) # Long Point
+        self.goto(r4*math.cos(angle), r4*math.sin(angle))
+        self.penup()
+
+################################################################################
 # Heightmaps
 ################################################################################
 
