@@ -119,6 +119,11 @@ class Turtle:
         self.heading = self.dot([self.heading], self.rot(self.right_v, angle))[0]
         self.normal = self.dot([self.normal], self.rot(self.right_v, angle))[0]
 
+    def pitchrr(self, rise, run):
+        angle = -math.atan2(rise, run)
+        self.heading = self.dot([self.heading], self.rot(self.right_v, angle))[0]
+        self.normal = self.dot([self.normal], self.rot(self.right_v, angle))[0]
+
 ################################################################################
 # Turtle.yaw - Rotate right or left as viewed from above without changing the
 # normal vector
@@ -160,6 +165,22 @@ class Turtle:
 
     setpos = goto
     setposition = goto
+
+################################################################################
+# Turtle.delta(x, y, z, e)
+#
+# Move by the requested parameter in each axis, regardless of heading
+################################################################################
+
+    def delta(self, x=None, y=None, z=None, e=None, comment=None):
+        if x is not None:
+            self._x = self._x + x
+        if y is not None:
+            self._y = self._y + y
+        if z is not None:
+            self._z = self._z + z
+        self._machine.move(self._x, self._y, self._z, e, li=self._isdown, comment=comment)
+
 
 ################################################################################
 # Turtle.setx(x)
