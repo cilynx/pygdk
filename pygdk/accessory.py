@@ -1,8 +1,3 @@
-import requests
-import pywemo
-import json
-
-
 class Accessory:
     def __init__(self, name, config):
         # print(f"Accessory.__init__({config})")
@@ -36,15 +31,19 @@ class Tasmota:
         self.host, self.id = config
 
     def on(self):
+        import requests
         # print("Tasmota.on()")
         return requests.get(f"http://{self.host}/cm?cmnd=Power{self.id}%20On")
 
     def off(self):
+        import requests
         # print("Tasmota.off()")
         return requests.get(f"http://{self.host}/cm?cmnd=Power{self.id}%20Off")
 
     @property
     def is_on(self):
+        import json
+        import requests
         response = requests.get(f"http://{self.host}/cm?cmnd=Power{self.id}")
         return(json.loads(response.text)[f"POWER{self.id}"] == "ON")
 
@@ -56,12 +55,14 @@ class WeMo:
         self.host, self.id = config
 
     def on(self):
+        import pywemo
         # print("WeMo.on()")
         if 'obj' not in self:
             self.obj = pywemo.discovery.device_from_description(f"http://{self.host}:49153/setup.xml")
         return self.obj.on()
 
     def off(self):
+        import pywemo
         # print("WeMo.off()")
         if 'obj' not in self:
             self.obj = pywemo.discovery.device_from_description(f"http://{self.host}:49153/setup.xml")
