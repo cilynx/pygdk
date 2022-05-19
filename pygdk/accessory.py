@@ -1,6 +1,11 @@
+import requests
+import pywemo
+import json
+
+
 class Accessory:
     def __init__(self, name, config):
-#        print(f"Accessory.__init__({config})")
+        # print(f"Accessory.__init__({config})")
         self.name = name
         self.before = config.get('Auto').lower() == 'before'
         self.after = config.get('Auto').lower() == 'after'
@@ -23,40 +28,41 @@ class Accessory:
         else:
             raise ValueError('No smart plug found.  Please check your `Accessory` configuration')
 
+
 class Tasmota:
 
     def __init__(self, config):
-#        print("Tasmota.__init__()")
+        # print("Tasmota.__init__()")
         self.host, self.id = config
 
     def on(self):
-        import requests
-#        print("Tasmota.on()")
+        # print("Tasmota.on()")
         return requests.get(f"http://{self.host}/cm?cmnd=Power{self.id}%20On")
 
     def off(self):
-        import requests
-#        print("Tasmota.off()")
+        # print("Tasmota.off()")
         return requests.get(f"http://{self.host}/cm?cmnd=Power{self.id}%20Off")
 
     @property
     def is_on(self):
-        import requests, json
         response = requests.get(f"http://{self.host}/cm?cmnd=Power{self.id}")
         return(json.loads(response.text)[f"POWER{self.id}"] == "ON")
+
 
 class WeMo:
 
     def __init__(self, config):
-#        print("WeMo.__init__()")
+        # print("WeMo.__init__()")
         self.host, self.id = config
-        import pywemo
-        self.obj = pywemo.discovery.device_from_description(f"http://{self.host}:49153/setup.xml")
 
     def on(self):
-#        print("WeMo.on()")
+        # print("WeMo.on()")
+        if 'obj' not in self:
+            self.obj = pywemo.discovery.device_from_description(f"http://{self.host}:49153/setup.xml")
         return self.obj.on()
 
     def off(self):
-#        print("WeMo.off()")
+        # print("WeMo.off()")
+        if 'obj' not in self:
+            self.obj = pywemo.discovery.device_from_description(f"http://{self.host}:49153/setup.xml")
         return self.obj.off()
