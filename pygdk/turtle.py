@@ -322,8 +322,10 @@ class Turtle:
 
     def pendown(self, z=None):
         self._isdown = True
-        self._machine.linear_interpolation(z=self._z_draw, comment="Pendown" if self._verbose else None)
-        self._z = z if z is not None else self._z_draw
+        if z is not None:
+            self._z_draw = z
+        self._z = self._z_draw
+        self._machine.linear_interpolation(z=self._z, comment="Pendown" if self._verbose else None)
 
     pd = pendown
     down = pendown
