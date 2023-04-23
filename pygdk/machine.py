@@ -861,7 +861,7 @@ class Machine:
     def power_off(self):
         print("Machine.power_off()")
         if self.controller.is_on:
-            
+
             for accessory in self.accessories:
                 if accessory.before:
                     print(f"Powering off {accessory.name}")
@@ -899,3 +899,4 @@ class Machine:
         os.system(f"camotics {filename}")
 
     CAMotics = camotics
+    simulate = camotics
