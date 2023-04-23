@@ -3,7 +3,6 @@ from pygdk import Plotter
 
 onefinity = Plotter('onefinity.json')
 onefinity.feed = 500
-onefinity.tool = '1/8" Downcut, 2 Flutes, 1/4" Shank, Carbide'
 
 turtle = onefinity.turtle(z=-1)
 
