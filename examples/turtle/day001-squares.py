@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 
-# Inspired by: https://www.youtube.com/watch?v=6oPapWwdboQ
+# Demo:
+# https://youtube.com/shorts/LU13_r0r3Ns
+
+# Inspired by:
+# https://github.com/atlemgw/turtlegraphics/blob/master/day1
+# https://www.youtube.com/watch?v=6oPapWwdboQ
+
+
 
 from pygdk import Plotter
 
