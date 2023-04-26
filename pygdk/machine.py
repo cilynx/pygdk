@@ -797,8 +797,8 @@ class Machine:
 
     def octoprint(self, start=False, select=True):
         print(f"{GREEN}Sending to OctoPrint{' and starting print' if start else ''}{ENDC}")
-        host = self.controller.get("Hostname / IP", None)
-        api_key = self.controller.get("API Key", None)
+        host = self.controller.host
+        api_key = self.controller.api_key
         if not host or not api_key:
             raise ValueError("You must configure `Hostname / IP` and `API Key` in the `Controller` section of your machine JSON before you can send to OctoPrint.  See https://github.com/cilynx/pygdk/tree/main/machines for configuration examples.")
         if not self.gcode:

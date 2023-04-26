@@ -5,6 +5,7 @@ class Controller:
 #        print("Controller.__init__()")
         self.flavor = config.get('Flavor', '').lower()
         self.host = config.get('Hostname / IP', None)
+        self.api_key = config.get('API Key', None)
         self.boot_wait = config.get('Boot Wait', 0)
         self.shutdown_wait = config.get('Shutdown Wait', 0)
         self.tasmota = Tasmota(config.get('Tasmota', None)) if config.get('Tasmota', None) else None
