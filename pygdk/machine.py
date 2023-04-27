@@ -64,6 +64,7 @@ class Machine:
             self._x_clear = None
             self._y_clear = None
             self._z_clear = None
+            self._fan_speed = None
             self.gcode = None
 
 ################################################################################
@@ -695,6 +696,16 @@ class Machine:
             self.rapid(c_x, c_y, self.safe_z, comment="Retract")
 
         self.queue(comment='Legacy Rectangular Pocke | END', style='feature')
+
+################################################################################
+# Fan Control
+################################################################################
+
+    def fan_on(self, s=256):
+        self.queue(code='M106', s=s, comment=f"Setting fan to {s}")
+
+    def fan_off(self):
+        self.queue(code='M107', comment="Turning fan off")
 
 ################################################################################
 # Turtle Object Reference
