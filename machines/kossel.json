@@ -9,6 +9,7 @@
    "Nozzle Diameter": 0.4,
    "Retraction": 8,
    "Extra Push": 1,
+   "Bowden Length": 900,
    "Filament Table": "filament.json",
    "Start G-Code": [
      ["M80", "Turn mains power on"],
