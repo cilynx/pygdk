@@ -58,7 +58,7 @@ class FDMPrinter(Machine):
             self.queue(code='G0', e=self.bowden_length+prime, f=300, comment="Load filament")
 
     def unload_filament(self):
-        self.queue(code='G0', x=0, y=0, z=10, f=max_feed comment="Straighten bowden tube")
+        self.queue(code='G0', x=0, y=0, z=10, f=max_feed, comment="Straighten bowden tube")
         self.wait_for_nozzle = True
         self.nozzle_temp = 220
         self.queue(code='G0', e=-self.dict['Bowden Length'], f=3000, comment="Unload filament")
