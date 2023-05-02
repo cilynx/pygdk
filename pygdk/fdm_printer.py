@@ -27,10 +27,6 @@ class FDMPrinter(Machine):
             self.bowden_length = self.dict['Bowden Length']
             self.retract_f = self.dict['Retraction']
             self.extra_push = self.dict['Extra Push']
-            self.wait_for_bed = self.dict.get('Wait For Heated Bed', False)
-            self._bed_temp = None
-            self.wait_for_nozzle = self.dict.get('Wait For Nozzle', True)
-            self._nozzle_temp = None
             if self.dict.get('Acceleration', None) is not None:
                 self.accel = self['Acceleration']
             self.feed = self.dict['Max Feed Rate (mm/min)']
@@ -51,45 +47,28 @@ class FDMPrinter(Machine):
 
     def load_filament(self, prime=100):
         self.queue(code='G0', x=0, y=0, z=10, f=self.max_feed, comment="Straighten bowden tube")
-        self.wait_for_nozzle = True
-        self.nozzle_temp = 220
         self.queue(code='G0', e=self.bowden_length, f=3000, comment="Load filament")
+        self.wait_for_nozzle_temp(220)
         if prime:
             self.queue(code='G0', e=self.bowden_length+prime, f=300, comment="Load filament")
 
     def unload_filament(self):
         self.queue(code='G0', x=0, y=0, z=10, f=max_feed, comment="Straighten bowden tube")
-        self.wait_for_nozzle = True
-        self.nozzle_temp = 220
         self.queue(code='G0', e=-self.dict['Bowden Length'], f=3000, comment="Unload filament")
+        self.wait_for_nozzle_temp(220)
 
 ################################################################################
 # Hot End and Bed Temperatures
 ################################################################################
 
-    @property
-    def nozzle_temp(self):
-        if self._nozzle_temp is None:
-            raise ValueError(f"{RED}Nozzle temperature must be set before it can be queried{ENDC}")
-        return self._nozzle_temp
+    def set_nozzle_temp(self, deg_c):
+        self.queue(code='M104', s=deg_c, comment=f"Set hotend to {deg_c}C and move on", style='fdm_printer')
 
-    @nozzle_temp.setter
-    def nozzle_temp(self, temp_c):
-        if self.wait_for_nozzle:
-            self.queue(code='M109', s=temp_c, comment="Wait for hotend to come up to temperature", style='fdm_printer')
-        else:
-            self.queue(code='M104', s=temp_c, comment="Set hotend temperature and moving on", style='fdm_printer')
-        self._nozzle_temp = temp_c
+    def wait_for_nozzle_temp(self, deg_c):
+        self.queue(code='M109', s=deg_c, comment=f"Wait for hotend to get to {deg_c}C", style='fdm_printer')
 
-    @property
-    def bed_temp(self):
-        if self._bed_temp is None:
-            raise ValueError(f"{RED}Bed temperature must be set before it can be queried{ENDC}")
-        return self._bed_temp
+    def set_bed_temp(self, deg_c):
+        self.queue(code='M140', s=deg_c, comment=f"Set bed to {deg_c}C and move on", style='fdm_printer')
 
-    @bed_temp.setter
-    def bed_temp(self, temp_c):
-        if self.wait_for_bed:
-            self.queue(code='M190', s=temp_c, comment="Wait for bed to come up to temperature", style='fdm_printer')
-        else:
-            self.queue(code='M140', s=temp_c, comment="Set bed temperature and moving on", style='fdm_printer')
+    def wait_for_bed_temp(self, deg_c):
+        self.queue(code='M190', s=deg_c, comment=f"Wait for bed to get to {deg_c}C", style='fdm_printer')
