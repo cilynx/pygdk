@@ -24,7 +24,7 @@ class FDMPrinter(Machine):
             with open(f"tables/{self.dict['Filament Table']}", 'r') as ft:
                 self.filament_table = json.load(ft)
             self.nozzle_d = self.dict['Nozzle Diameter']
-            self.bowden_length = self.dict['Bowden Length']
+            self.bowden_l = self.dict['Bowden Length']
             self.retract_f = self.dict['Retraction']
             self.extra_push = self.dict['Extra Push']
             if self.dict.get('Acceleration', None) is not None:
@@ -47,15 +47,16 @@ class FDMPrinter(Machine):
 
     def load_filament(self, prime=100):
         self.queue(code='G0', x=0, y=0, z=10, f=self.max_feed, comment="Straighten bowden tube")
-        self.queue(code='G0', e=self.bowden_length, f=3000, comment="Load filament")
         self.wait_for_nozzle_temp(220)
+        self.queue(code='G1', e=self.bowden_l, f=3000, comment="Load filament")
         if prime:
-            self.queue(code='G0', e=self.bowden_length+prime, f=300, comment="Load filament")
+            self.queue(code='G0', z=100, f=self.max_feed, comment="Make room for priming mess")
+            self.queue(code='G1', e=self.bowden_l+prime, f=300, comment="Load filament")
 
     def unload_filament(self):
-        self.queue(code='G0', x=0, y=0, z=10, f=max_feed, comment="Straighten bowden tube")
-        self.queue(code='G0', e=-self.dict['Bowden Length'], f=3000, comment="Unload filament")
+        self.queue(code='G0', x=0, y=0, z=10, f=self.max_feed, comment="Straighten bowden tube")
         self.wait_for_nozzle_temp(220)
+        self.queue(code='G1', e=-self.bowden_l, f=3000, comment="Unload filament")
 
 ################################################################################
 # Hot End and Bed Temperatures
