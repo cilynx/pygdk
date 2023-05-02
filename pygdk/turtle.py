@@ -564,9 +564,10 @@ class Squirtle(Turtle):
         self.extrude = False
         self._isdown = False
 
-    def pendown(self):
-        self.e += self.printer.retract_f + self.printer.extra_push
-        self.goto(e=self.e, comment="Reprime filament")
+    def pendown(self, prime=True):
+        if prime:
+            self.e += self.printer.retract_f + self.printer.extra_push
+            self.goto(e=self.e, comment="Prime filament")
         self.extrude = True
         self._isdown = True
 
@@ -577,5 +578,16 @@ class Squirtle(Turtle):
         if self.extrude:
             #TODO: Filament object
             self.e = self.e + self.extrusion_multiplier*(self._machine.nozzle_d*distance*0.2)/(math.pi*(1.75/2)**2)
-            comment = f"Pumping {self.extrusion_multiplier*(self._machine.nozzle_d*distance*0.2)/(math.pi*(1.75/2)**2):.4f}mm of filament"
+            comment = f"Push {self.extrusion_multiplier*(self._machine.nozzle_d*distance*0.2)/(math.pi*(1.75/2)**2):.4f}mm of filament"
         super().forward(distance, dz, self.e, comment)
+
+    def goto(self, x=None, y=None, z=None, e=None, comment=None):
+        if x is None: x = self._x
+        if y is None: y = self._y
+        if z is None: z = self._z
+        if self.extrude:
+            distance = ( (x-self._x)**2 + (y-self._y)**2 + (z-self._z)**2 )**0.5
+            #TODO: Filament object
+            self.e = self.e + self.extrusion_multiplier*(self._machine.nozzle_d*distance*0.2)/(math.pi*(1.75/2)**2)
+            comment = f"Push {self.extrusion_multiplier*(self._machine.nozzle_d*distance*0.2)/(math.pi*(1.75/2)**2):.4f}mm of filament"
+        super().goto(x, y, z, self.e, comment)
