@@ -33,10 +33,9 @@ class FDMPrinter(Machine):
             for line in self.dict['Start G-Code']:
                 self.queue(code=line[0], comment=line[1])
 
-    def __del__(self):
-        if hasattr(self, 'dict'):
-            for line in self.dict.get('End G-Code', []):
-                self.queue(code=line[0], comment=line[1])
+################################################################################
+# Squirtle Object
+################################################################################
 
     def squirtle(self, verbose=False):
         return Squirtle(self, verbose)

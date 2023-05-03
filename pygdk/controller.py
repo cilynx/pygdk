@@ -1,3 +1,5 @@
+import time
+
 from .accessory import Tasmota, WeMo, Accessory
 
 class Controller:
@@ -12,14 +14,12 @@ class Controller:
         self.wemo = WeMo(config.get('WeMo', None)) if config.get('WeMo', None) else None
 
     def power_on(self):
-        import time
-
         if self.tasmota:
             self.tasmota.on()
         elif self.wemo:
             self.wemo.on()
         else:
-            raise ValueError('No smart plug found.  Please check your `Controller` configuration')
+            print('No smart plug found.  Please check your `Controller` configuration')
 
         print(f"Waiting {self.boot_wait}s for Controller to Boot")
         time.sleep(self.boot_wait)
@@ -38,7 +38,7 @@ class Controller:
         elif self.wemo:
             self.wemo.off()
         else:
-            raise ValueError('No smart plug found.  Please check your `Controller` configuration')
+            raise print('No smart plug found.  Please check your `Controller` configuration')
 
     @property
     def is_on(self):
@@ -47,7 +47,7 @@ class Controller:
         elif self.wemo:
             return self.wemo.is_on
         else:
-            raise ValueError('No smart plug found.  Please check your `Controller` configuration')
+            print('No smart plug found.  Please check your `Controller` configuration')
 
     @property
     def is_off(self):

@@ -1,6 +1,10 @@
 import json
-import sys
 import math
+import os
+import requests
+import argparse
+import sys
+script = sys.argv[0]
 
 from .tool import Tool
 from .turtle import Turtle
@@ -66,6 +70,26 @@ class Machine:
             self._z_clear = None
             self._fan_speed = None
             self.gcode = None
+        ap = argparse.ArgumentParser()
+        ap.add_argument("-s", "--simulate", action='store_true', help="Simulate G-code in CAMotics")
+        ap.add_argument("-l", "--load", action='store_true', help=f"Send G-code to {self.name} but do not execute")
+        ap.add_argument("-e", "--execute", action='store_true', help=f"Send G-code to {self.name} and execute")
+        ap.add_argument("arg", help="Optional argument passed back to the calling script", nargs='?', default=None)
+        self._args = ap.parse_args()
+        self._initialized = True
+
+################################################################################
+# Destructor
+################################################################################
+
+    def __del__(self):
+        if hasattr(self, '_initialized'):
+            for line in self.dict.get('End G-Code', []):
+                self.queue(code=line[0], comment=line[1])
+            self.print_gcode()
+            if self._args.simulate: self.simulate()
+            if self._args.load: self.send_gcode()
+            if self._args.execute: self.send_gcode(start=True)
 
 ################################################################################
 # Command Queue
@@ -796,7 +820,7 @@ class Machine:
 # Save G-code to File
 ################################################################################
 
-    def save_gcode(self, filename=sys.argv[0]+'.nc'):
+    def save_gcode(self, filename=script+'.nc'):
         if not self.gcode:
             self.generate_gcode()
         with open(filename, 'w') as file:
@@ -814,8 +838,7 @@ class Machine:
             raise ValueError("You must configure `Hostname / IP` and `API Key` in the `Controller` section of your machine JSON before you can send to OctoPrint.  See https://github.com/cilynx/pygdk/tree/main/machines for configuration examples.")
         if not self.gcode:
             self.generate_gcode()
-        import os, requests
-        filename = os.path.basename(sys.argv[0])+'.g'
+        filename = os.path.basename(script)+'.g'
         fle={'file': (filename, self.gcode)}
         url=f"http://{host}/api/files/local"
         payload={'select': select, 'print': start }
@@ -855,19 +878,20 @@ class Machine:
     def power_on(self):
         print("Machine.power_on()")
         if self.controller.is_off:
-
-            for accessory in self.accessories:
-                if accessory.before:
-                    print(f"Powering on {accessory.name}")
-                    accessory.power_on()
+            if self.accessories:
+                for accessory in self.accessories:
+                    if accessory.before:
+                        print(f"Powering on {accessory.name}")
+                        accessory.power_on()
 
             print("Powering on Controller")
             self.controller.power_on()
 
-            for accessory in self.accessories:
-                if accessory.after:
-                    print(f"Powering on {accessory.name}")
-                    accessory.power_on()
+            if self.accessories:
+                for accessory in self.accessories:
+                    if accessory.after:
+                        print(f"Powering on {accessory.name}")
+                        accessory.power_on()
 
     def power_off(self):
         print("Machine.power_off()")
