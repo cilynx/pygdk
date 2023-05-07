@@ -82,7 +82,8 @@ class Machine:
 # Destructor
 ################################################################################
 
-    def __del__(self):
+    # def __del__(self):
+    def go(self):
         if hasattr(self, '_initialized'):
             for line in self.dict.get('End G-Code', []):
                 self.queue(code=line[0], comment=line[1])
