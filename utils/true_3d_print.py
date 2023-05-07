@@ -5,70 +5,73 @@ from pygdk import FDMPrinter
 kossel = FDMPrinter('kossel.json')
 
 kossel.material = 'Amazon Basics Black PLA'
-kossel.nozzle = 0.4
 kossel.feed = 1000
 
-de = 3*(0.4*10*0.2)/(3.14159*(1.75/2)**2)
-e = 0
+kossel.wait_for_bed = False
+kossel.bed_temp = 60
+kossel.wait_for_nozzle = True
+kossel.nozzle_temp = 200
+kossel.wait_for_bed = True
+kossel.bed_temp = 60
 
-turtle = kossel.turtle(verbose=True)
-turtle.goto(-5, 5, 0.2)
-turtle.pendown()
+squirtle = kossel.squirtle(verbose=True)
+squirtle.goto(-5, 5, 0.2)
+squirtle.pendown()
+
+# Priming grid
 for i in range(10):
-    e += de
-    turtle.forward(30, e=e, comment="prime")
-    e += de
-    turtle.circle(0.5,180, e=e, comment="circle back")
-    e += de
-    turtle.forward(30, e=e, comment="prime")
-    e += de
-    turtle.circle(-0.5,180, e=e, comment="circle_back")
-turtle.penup()
-turtle.goto(z=0.5)
-turtle.goto(0,0,0.2)
-turtle.pendown()
+    squirtle.forward(30, comment="prime")
+    squirtle.circle(0.5,180, comment="circle back")
+    squirtle.forward(30, comment="prime")
+    squirtle.circle(-0.5,180, comment="circle_back")
+squirtle.penup()
+squirtle.goto(z=0.5)
+squirtle.goto(0,0,0.2)
+squirtle.pendown()
 
-for i in range(50):
+# Lower post
+for i in range(20):
     for j in range(4):
-        e += de
-        turtle.forward(10, dz=0.2/4, e=e, comment="post")
-        turtle.right(90)
+        squirtle.forward(20, dz=0.2/4, comment="post")
+        squirtle.right(90)
 
+# Lower elbow
 for j in range(21):
     for i in range(4):
-        e += de
-        turtle.forward(10, e=e, comment="curve")
-        turtle.right(90)
-    turtle.roll(1)
+        squirtle.forward(20, comment="curve")
+        squirtle.right(90)
+    squirtle.roll(1)
 
-for i in range(100):
+# Horizontal bridge
+for i in range(120):
     for i in range(4):
-        e += de
-        turtle.forward(10, e=e, comment="bridge")
-        turtle.right(90)
-    turtle.roll(-20)
-    turtle.left(90)
-    e += de
-    turtle.forward(0.2, e=e, comment="layer")
-    turtle.right(90)
-    turtle.roll(20)
+        squirtle.forward(20, comment="bridge")
+        squirtle.right(90)
+    squirtle.roll(-20)
+    squirtle.left(90)
+    squirtle.forward(0.2, comment="layer")
+    squirtle.right(90)
+    squirtle.roll(20)
 
-e += de
-turtle.forward(10, e=e, comment="changeup")
-turtle.right(90)
-e += de
-turtle.forward(10, e=e, comment="changeup")
-turtle.right(90)
+squirtle.forward(20, comment="changeup")
+squirtle.right(90)
+squirtle.forward(20, comment="changeup")
+squirtle.right(90)
 
+# Upper elbow
 for j in range(21):
     for i in range(4):
-        e += de
-        turtle.forward(10, e=e, comment="curve")
-        turtle.right(90)
-    turtle.roll(1)
+        squirtle.forward(20, comment="curve")
+        squirtle.right(90)
+    squirtle.roll(1)
 
-for i in range(50):
+# Upper post
+for i in range(20):
     for j in range(4):
-        e += de
-        turtle.forward(10, e=e, dz=0.2/4, comment="post")
-        turtle.right(90)
+        squirtle.forward(20, dz=0.2/4, comment="post")
+        squirtle.right(90)
+
+kossel.print_gcode()
+#kossel.simulate()
+#kossel.send_gcode()
+kossel.octoprint(True)
