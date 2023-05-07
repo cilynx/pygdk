@@ -82,7 +82,7 @@ class Plotter(Machine):
 
     def optimize_linear_moves(self):
         self._optimize = False
-        turtle = self.turtle(verbose=True, z_draw=-124)
+        turtle = self.turtle(verbose=True, z_draw=self.dict['Plotter']['Z-Touch'])
         for color in self._linear_moves:
             if color:
                 self.pen_color = color
