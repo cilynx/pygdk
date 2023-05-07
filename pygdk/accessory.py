@@ -28,7 +28,12 @@ class Tasmota:
 
     def __init__(self, config):
         # print("Tasmota.__init__()")
-        self.host, self.id = config
+        self.host = config[0]
+        self.id = ''
+        if len(config) == 2:
+            self.id = config[1]
+        elif len(config) != 1:
+            raise ValueError('Tasmota configuration error.  See https://github.com/cilynx/pygdk#machine-configuration for assistance.')
 
     def on(self):
         import requests
