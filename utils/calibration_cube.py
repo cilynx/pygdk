@@ -34,7 +34,7 @@ kossel.feed = 500
 
 squirtle.pendown()
 for i in range(int(side/0.2)+2):
-    if kossel.feed < 1500:
+    if kossel.feed < 2500:
         kossel.feed += 100
     squirtle.pitch(90)
     squirtle.forward(0.2)
