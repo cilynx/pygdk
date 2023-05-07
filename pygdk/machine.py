@@ -329,7 +329,8 @@ class Machine:
             if z is not None:
                 self._z = z
 
-            self._linear_moves[self._optimize_tool].append([old_pos, new_pos])
+            if old_pos != new_pos:
+                self._linear_moves[self._optimize_tool].append([old_pos, new_pos])
         elif self._optimize:
             raise NotImplementedError(f"{RED}Optimizing relative moves is not yet implemented")
         else:
