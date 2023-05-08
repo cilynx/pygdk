@@ -543,6 +543,271 @@ class Turtle:
         self.penup()
 
 ################################################################################
+# Stick Lettering
+################################################################################
+
+    def draw_m(self, start=[0,0], height=10):
+        scale = height/10
+        self._machine.x_offset += start[0]
+        self._machine.y_offset += start[1]
+        self.penup()
+        self.goto(0,5*scale)            # start at the top of the 1st vertical line
+        self.pendown()
+        self.goto(0,0)            # draw the vertical bar
+        self.goto(0,3*scale)            # go to the start of the 1st hump
+        self.heading = [0,1,0]
+        self.circle(-2*scale, 180)      # draw the first hump
+        self.goto(4*scale,1*scale)            # drap the middle vertical line
+        self.goto(4*scale,3*scale)            # go to the start of the 2nd hump
+        self.heading = [0,1,0]
+        self.circle(-2*scale, 180)      # draw the second hump
+        self.goto(8*scale,0)            # drap the third vertical line
+        self.penup()
+        self._machine.x_offset -= start[0]
+        self._machine.y_offset -= start[1]
+        return(8*scale)
+
+    def draw_1(self, start=[0,0], height=10):
+        scale = height/10
+        self._machine.x_offset += start[0]
+        self._machine.y_offset += start[1]
+        self.penup()
+        self.goto(0, 10*scale)
+        self.pendown()
+        self.goto(0, 0)
+        self.penup()
+        self._machine.x_offset -= start[0]
+        self._machine.y_offset -= start[1]
+        return(1*scale)
+
+    def draw_2(self, start=[0,0], height=10):
+        scale = height/10
+        self._machine.x_offset += start[0]
+        self._machine.y_offset += start[1]
+        self.penup()
+        self.goto(0, 10*scale)
+        self.heading = [1,0,0]
+        self.pendown()
+        self.forward(5*scale)
+        self.right(90)
+        self.forward(5*scale)
+        self.right(90)
+        self.forward(5*scale)
+        self.left(90)
+        self.forward(5*scale)
+        self.left(90)
+        self.forward(5*scale)
+        self.penup()
+        self._machine.x_offset -= start[0]
+        self._machine.y_offset -= start[1]
+        return(5*scale)
+
+    def draw_3(self, start=[0,0], height=10):
+        scale = height/10
+        self._machine.x_offset += start[0]
+        self._machine.y_offset += start[1]
+        self.penup()
+        self.goto(0, 10*scale)
+        self.heading = [1,0,0]
+        self.pendown()
+        self.forward(5*scale)
+        self.right(90)
+        self.forward(10*scale)
+        self.right(90)
+        self.forward(5*scale)
+        self.penup()
+        self.right(90)
+        self.forward(5*scale)
+        self.right(90)
+        self.forward(2.5*scale)
+        self.pendown()
+        self.forward(2.5*scale)
+        self.penup()
+        self._machine.x_offset -= start[0]
+        self._machine.y_offset -= start[1]
+        return(5*scale)
+
+    def draw_4(self, start=[0,0], height=10):
+        scale = height/10
+        self._machine.x_offset += start[0]
+        self._machine.y_offset += start[1]
+        self.penup()
+        self.goto(0, 10*scale)
+        self.heading = [0,-1,0]
+        self.pendown()
+        self.forward(5*scale)
+        self.left(90)
+        self.forward(5*scale)
+        self.penup()
+        self.right(90)
+        self.backward(5*scale)
+        self.pendown()
+        self.forward(10*scale)
+        self.penup()
+        self._machine.x_offset -= start[0]
+        self._machine.y_offset -= start[1]
+        return(5*scale)
+
+    def draw_5(self, start=[0,0], height=10):
+        scale = height/10
+        self._machine.x_offset += start[0]
+        self._machine.y_offset += start[1]
+        self.penup()
+        self.goto(5*scale, 10*scale)
+        self.heading = [-1,0,0]
+        self.pendown()
+        self.forward(5*scale)
+        self.left(90)
+        self.forward(5*scale)
+        self.left(90)
+        self.forward(5*scale)
+        self.right(90)
+        self.forward(5*scale)
+        self.right(90)
+        self.forward(5*scale)
+        self.penup()
+        self._machine.x_offset -= start[0]
+        self._machine.y_offset -= start[1]
+        return(5*scale)
+
+    def draw_6(self, start=[0,0], height=10):
+        scale = height/10
+        self._machine.x_offset += start[0]
+        self._machine.y_offset += start[1]
+        self.penup()
+        self.goto(5*scale, 10*scale)
+        self.heading = [-1,0,0]
+        self.pendown()
+        self.forward(5*scale)
+        self.left(90)
+        self.forward(10*scale)
+        self.left(90)
+        self.forward(5*scale)
+        self.left(90)
+        self.forward(5*scale)
+        self.left(90)
+        self.forward(5*scale)
+        self.penup()
+        self._machine.x_offset -= start[0]
+        self._machine.y_offset -= start[1]
+        return(5*scale)
+
+    def draw_7(self, start=[0,0], height=10):
+        scale = height/10
+        self._machine.x_offset += start[0]
+        self._machine.y_offset += start[1]
+        self.penup()
+        self.goto(0, 7.5*scale)
+        self.heading = [0,1,0]
+        self.pendown()
+        self.forward(2.5*scale)
+        self.right(90)
+        self.forward(5*scale)
+        self.right(90)
+        self.forward(10*scale)
+        self.penup()
+        self._machine.x_offset -= start[0]
+        self._machine.y_offset -= start[1]
+        return(5*scale)
+
+    def draw_8(self, start=[0,0], height=10):
+        scale = height/10
+        self._machine.x_offset += start[0]
+        self._machine.y_offset += start[1]
+        self.penup()
+        self.goto(5*scale, 5*scale)
+        self.heading = [0,1,0]
+        self.pendown()
+        self.forward(5*scale)
+        self.left(90)
+        self.forward(5*scale)
+        self.left(90)
+        self.forward(10*scale)
+        self.left(90)
+        self.forward(5*scale)
+        self.left(90)
+        self.forward(5*scale)
+        self.left(90)
+        self.forward(5*scale)
+        self.penup()
+        self._machine.x_offset -= start[0]
+        self._machine.y_offset -= start[1]
+        return(5*scale)
+
+    def draw_9(self, start=[0,0], height=10):
+        scale = height/10
+        self._machine.x_offset += start[0]
+        self._machine.y_offset += start[1]
+        self.penup()
+        self.goto(5*scale, 5*scale)
+        self.heading = [-1,0,0]
+        self.pendown()
+        self.forward(5*scale)
+        self.right(90)
+        self.forward(5*scale)
+        self.right(90)
+        self.forward(5*scale)
+        self.right(90)
+        self.forward(10*scale)
+        self.penup()
+        self._machine.x_offset -= start[0]
+        self._machine.y_offset -= start[1]
+        return(5*scale)
+
+    def draw_0(self, start=[0,0], height=10):
+        scale = height/10
+        self._machine.x_offset += start[0]
+        self._machine.y_offset += start[1]
+        self.penup()
+        self.goto(0, 0)
+        self.heading = [1,0,0]
+        self.pendown()
+        self.forward(5*scale)
+        self.left(90)
+        self.forward(10*scale)
+        self.left(90)
+        self.forward(5*scale)
+        self.left(90)
+        self.forward(10*scale)
+        self.penup()
+        self._machine.x_offset -= start[0]
+        self._machine.y_offset -= start[1]
+        return(5*scale)
+
+    def draw_dot(self, start=[0,0], height=10):
+        scale = height/10
+        self._machine.x_offset += start[0]
+        self._machine.y_offset += start[1]
+        self.penup()
+        self.goto(0, 0)
+        self.pendown()
+        self.goto(0, 1*scale)
+        self.penup()
+        self._machine.x_offset -= start[0]
+        self._machine.y_offset -= start[1]
+        return(1*scale)
+
+    def write(self, text=None, start=[0,0], height=10):
+        scale = height/10
+        dispatcher = {
+            'm': self.draw_m,
+            '1': self.draw_1,
+            '2': self.draw_2,
+            '3': self.draw_3,
+            '4': self.draw_4,
+            '5': self.draw_5,
+            '6': self.draw_6,
+            '7': self.draw_7,
+            '8': self.draw_8,
+            '9': self.draw_9,
+            '0': self.draw_0,
+            '.': self.draw_dot,
+        }
+        for char in text:
+            draw_char = dispatcher.get(char)
+            start[0] += draw_char(start, height) + scale
+
+################################################################################
 # Squirtle -- A turtle that extrudes filament
 ################################################################################
 
