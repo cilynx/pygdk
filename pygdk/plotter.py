@@ -14,7 +14,7 @@ ENDC   = '\033[0m'
 ################################################################################
 
 class Plotter(Machine):
-    def __init__(self, json_file, safe_z=10):
+    def __init__(self, json_file):
         super().__init__(json_file)
         self.queue(comment='Loading Plotter parameters from JSON', style='plotter')
         if 'Plotter' not in self.dict:
@@ -25,7 +25,8 @@ class Plotter(Machine):
         with open(f"tables/{self.dict['Tool Table']}", 'r') as tt:
             self._tool_table = json.load(tt)
 
-        self.safe_z = safe_z
+        self.safe_z = self._plotter['Z-Stage']
+        self.z_draw = self._plotter['Z-Touch']
 
 ################################################################################
 # Pen Color

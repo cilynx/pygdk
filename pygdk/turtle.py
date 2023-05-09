@@ -543,6 +543,26 @@ class Turtle:
         self.penup()
 
 ################################################################################
+# Geometric Primitives
+################################################################################
+
+    def rectangle(self, start=[0,0], width=10, height=10, tool_d=1, stepover=False):
+        self.penup()
+        self.goto(start[0], start[1])
+        self.heading = [0,1,0]
+        if stepover:
+            self.pendown()
+            self.forward(height-tool_d)
+            cut = tool_d
+            while height-cut > 0:
+                self.right(90)
+                self.forward(height-cut)
+                self.right(90)
+                self.forward(height-cut)
+                cut += stepover
+            self.penup()
+
+################################################################################
 # Stick Lettering
 ################################################################################
 
@@ -803,7 +823,7 @@ class Turtle:
             '0': self.draw_0,
             '.': self.draw_dot,
         }
-        for char in text:
+        for char in str(text):
             draw_char = dispatcher.get(char)
             start[0] += draw_char(start, height) + scale
 
