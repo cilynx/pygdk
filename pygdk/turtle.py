@@ -370,9 +370,9 @@ class Turtle:
             self._machine.pen_color = color
             self._pencolor = color
         if next is not None:
-            self._machine.rapid(next[0], next[1], comment="Going to requested next position after color change")    
+            self.goto(next[0], next[1], comment="Going to requested next position after color change")
         else:
-            self._machine.rapid(self._x, self._y, comment="Going back to Turtle's (x,y) after color change")
+            self.goto(self._x, self._y, comment="Going back to Turtle's (x,y) after color change")
         if self._isdown:
             self.pendown()
         return self._pencolor
