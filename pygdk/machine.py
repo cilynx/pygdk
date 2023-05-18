@@ -862,10 +862,11 @@ class Machine:
             self.generate_gcode()
         import os, requests
         filename = os.path.basename(sys.argv[0])+'.nc'
-        gcode={'gcode': (filename, self.gcode)}
-        response = requests.put(f"http://{self.controller.host}/api/file", files=gcode)
+        response = requests.put(f"http://{self.controller.host}/api/file/{filename}", data=self.gcode)
         print(response.__dict__)
         if start:
+            import time
+            time.sleep(5)
             response = requests.put(f"http://{self.controller.host}/api/start")
             print(response.__dict__)
 
