@@ -1,0 +1,6 @@
+{
+  "based on" : "rs274",
+  "run homing operation" : "G28",
+  "set home" : "G28.1",
+  "return to home" : "G28.2"
+}

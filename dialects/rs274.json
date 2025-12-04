@@ -1,0 +1,7 @@
+{
+   "rapid positioning" : "G0",
+   "linear interpolation" : "G1",
+   "helical interpolation cw" : "G2",
+   "helical interpolation ccw" : "G3",
+   "return to home" : "G28"
+}
