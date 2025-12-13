@@ -354,6 +354,90 @@
     "diameter": 1,
     "description": "Sharpie, Ultra Fine, Orange"
   },
+  "108": {
+    "units": "metric",
+    "shape": "cylindrical",
+    "length": 1,
+    "diameter": 3,
+    "description": "Sharpie, Fine, Red"
+  },
+  "109": {
+    "units": "metric",
+    "shape": "cylindrical",
+    "length": 1,
+    "diameter": 3,
+    "description": "Sharpie, Fine, Pink"
+  },
+  "110": {
+    "units": "metric",
+    "shape": "cylindrical",
+    "length": 1,
+    "diameter": 3,
+    "description": "Sharpie, Fine, Mauve"
+  },
+  "111": {
+    "units": "metric",
+    "shape": "cylindrical",
+    "length": 1,
+    "diameter": 3,
+    "description": "Sharpie, Fine, Purple"
+  },
+  "112": {
+    "units": "metric",
+    "shape": "cylindrical",
+    "length": 1,
+    "diameter": 3,
+    "description": "Sharpie, Fine, Orange"
+  },
+  "113": {
+    "units": "metric",
+    "shape": "cylindrical",
+    "length": 1,
+    "diameter": 3,
+    "description": "Sharpie, Fine, Lime"
+  },
+  "114": {
+    "units": "metric",
+    "shape": "cylindrical",
+    "length": 1,
+    "diameter": 3,
+    "description": "Sharpie, Fine, Green"
+  },
+  "115": {
+    "units": "metric",
+    "shape": "cylindrical",
+    "length": 1,
+    "diameter": 3,
+    "description": "Sharpie, Fine, Turquoise"
+  },
+  "116": {
+    "units": "metric",
+    "shape": "cylindrical",
+    "length": 1,
+    "diameter": 3,
+    "description": "Sharpie, Fine, Black"
+  },
+  "117": {
+    "units": "metric",
+    "shape": "cylindrical",
+    "length": 1,
+    "diameter": 3,
+    "description": "Sharpie, Fine, Dark Blue"
+  },
+  "118": {
+    "units": "metric",
+    "shape": "cylindrical",
+    "length": 1,
+    "diameter": 3,
+    "description": "Sharpie, Fine, Blue"
+  },
+  "119": {
+    "units": "metric",
+    "shape": "cylindrical",
+    "length": 1,
+    "diameter": 3,
+    "description": "Sharpie, Fine, Sky Blue"
+  },
   "150": {
     "units": "imperial",
     "shape": "ballnose",
