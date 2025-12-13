@@ -10,6 +10,10 @@ class Controller:
         self.api_key = config.get('API Key', None)
         self.boot_wait = config.get('Boot Wait', 0)
         self.shutdown_wait = config.get('Shutdown Wait', 0)
+        self.shutdown_urls = {
+            'octoprint': f"http://{self.host}/api/system/commands/core/shutdown",
+            'buildbotics': f"http://{self.host}/api/shutdown"
+        }
         self.tasmota = Tasmota(config.get('Tasmota', None)) if config.get('Tasmota', None) else None
         self.wemo = WeMo(config.get('WeMo', None)) if config.get('WeMo', None) else None
 
@@ -27,8 +31,11 @@ class Controller:
     def power_off(self):
         import requests, time
         print("Sending Shutdown Signal")
-        response = requests.put(f"http://{self.host}/api/shutdown")
-#        print(response)
+        try:
+            response = requests.put(self.shutdown_urls[self.flavor])
+            print(response)
+        except:
+            pass
         print(f"Waiting {self.shutdown_wait}s for Controller to Shutdown")
         time.sleep(self.shutdown_wait)
 
